@@ -9,22 +9,28 @@ def get_dashboard(title: str):
   dashboard = next(iter(sdk.search_dashboards(title=title)), None)
   if not dashboard:
     print(f"dashboard {title} was not found")
-  dashboard
+  return dashboard
 
 def get_tile(dash: models.Dashboard, title: str):
   """Find a dashboard tile by title"""
-  title = title.lower
-  [tile for tile in dash.dashboard_elements if tile.title.lower == title]
+  title = title.lower()
+  found = None
+  assert dash.dashboard_elements
+  for tile in dash.dashboard_elements:
+    assert tile.title
+    if tile.title.lower() == title:
+      found = tile
   if not tile:
-    print(f"tile {title} of dashboard {dash.tile} was not found")
-  tile
+    print(f"tile {title} of dashboard {dash.title} was not found")
+  return tile
 
 def download_tile(tile: models.DashboardElement, format:str = 'png'):
   """Download the dashboard tile in the specified format"""
   if not tile.query_id:
     print(f"tile {tile.title} has no query_id")
     return None
-  task = sdk.create_query_render_task(tile.query_id, format)
+  task = sdk.create_query_render_task(
+      query_id=tile.query_id, result_format=format, width=500, height=500)
 
   if (not task or not task.id):
     print(f"Could not create a render task for {tile.title}")
