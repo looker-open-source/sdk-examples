@@ -7,6 +7,8 @@ from typing import Sequence, List, Dict
 
 
 class Sheets:
+    """An API for manipulating the Google Sheet containing hackathon data."""
+
     def __init__(self, spreadsheet_id):
         scopes = [
             "https://www.googleapis.com/auth/drive",
@@ -23,7 +25,7 @@ class Sheets:
         self.id = spreadsheet_id
 
     def get_hackathons(self):
-        """Get active hackathon names."""
+        """Get names of active hackathons."""
         hackathons_table = self.spreadsheet.get(
             spreadsheetId=self.id, range="hackathons!A1:end"
         ).execute()
@@ -31,9 +33,27 @@ class Sheets:
         date_index = hackathons_table["values"][0].index("date")
         hackathons = []
         for row in data:
-            if datetime.strptime(row[date_index], "%d/%m/%Y") >= datetime.now():
+            if datetime.strptime(row[date_index], "%m/%d/%Y") >= datetime.now():
                 hackathons.append(row[1])
         return hackathons
+
+    def register_user(
+        self,
+        hackathon: str,
+        first_name: str,
+        last_name: str,
+        email: str,
+        company: str,
+        country: str,
+        tshirt_size: str,
+    ):
+        """Register user to a hackathon"""
+        if not self._is_created(email):
+            self.create_user(
+                first_name, last_name, email, company, country, tshirt_size
+            )
+        self._register_user(email, hackathon)
+        return
 
     def create_user(
         self,
@@ -41,13 +61,31 @@ class Sheets:
         last_name: str,
         email: str,
         company: str,
+        country: str,
         tshirt_size: str,
     ):
-        """Create user."""
-        if not self._is_created(email):
-            print("Will create")
-        else:
-            print("Exists already")
+        """Append user details to users sheet."""
+        data = {
+            "values": [
+                [
+                    first_name,
+                    last_name,
+                    email,
+                    company,
+                    country,
+                    datetime.now().strftime("%m/%d/%Y"),
+                    tshirt_size,
+                ]
+            ]
+        }
+        request = self.spreadsheet.append(
+            spreadsheetId=self.id,
+            range="users!A1:END",
+            insertDataOption="INSERT_ROWS",
+            valueInputOption="RAW",
+            body=data,
+        )
+        request.execute()
         return
 
     def _is_created(self, email: str) -> bool:
@@ -61,6 +99,7 @@ class Sheets:
         return found
 
     def get_users(self):
+        """Get users from the users sheets."""
         resp = self.spreadsheet.get(
             spreadsheetId=self.id, range="users!A1:end"
         ).execute()
