@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Any, Dict, List
+from typing import cast, Dict, List, Union
 
 from looker_sdk import client, models
 
@@ -8,7 +8,8 @@ sdk = client.setup("../looker.ini")
 
 
 def main():
-    """Given a look id, obtain the query behind it and run it with the desired filter values.
+    """Given a look id, obtain the query behind it and run it with the desired
+     filter values.
     """
     look_id = sys.argv[1] if len(sys.argv) > 1 else ""
     filter_args = iter(sys.argv[2:])
@@ -16,7 +17,8 @@ def main():
 
     if not (look_id and len(sys.argv[2:]) > 0 and len(sys.argv[2:]) % 2 == 0):
         print(
-            "Please provide: <lookId> [<filter_1>] [<filter_value_1>] [<filter_2>] ..."
+            "Please provide: <lookId> <filter_1> <filter_value_1> "
+            "<filter_2> <filter_value_2> ..."
         )
         return
 
@@ -24,7 +26,7 @@ def main():
         filter_value = next(filter_args)
         filter_values.append({filter_name: filter_value})
 
-    query = get_look_query(look_id)
+    query = get_look_query(int(look_id))
     for filters in filter_values:
         results = run_query_with_filter(query, filters)
         print(f"Query results with filters={filters}: {results}", end="\n\n")
@@ -39,15 +41,16 @@ def get_look_query(id: int) -> models.Query:
     return query
 
 
-def run_query_with_filter(
-    query: models.Query, filters: Dict[str, str]
-) -> List[Dict[str, Any]]:
+TJson = List[Dict[str, Union[str, int, float, bool, None]]]
+
+
+def run_query_with_filter(query: models.Query, filters: Dict[str, str]) -> TJson:
     """Runs the specified query with the specified filters.
     """
     request = create_query_request(query, filters)
-    json_resp = sdk.run_inline_query("json", request, cache=False)
-    json_ = json.loads(json_resp)
-    return json_
+    json_ = sdk.run_inline_query("json", request, cache=False)
+    json_resp = cast(TJson, json.loads(json_))
+    return json_resp
 
 
 def create_query_request(q: models.Query, filters: Dict[str, str]) -> models.WriteQuery:
