@@ -1,5 +1,6 @@
 import sys
 import time
+from typing import Optional
 
 from looker_sdk import client, models
 
@@ -22,16 +23,16 @@ def main():
         return
 
     dashboard = get_dashboard(dashboard_title)
-    download_dashboard(dashboard, pdf_style, pdf_width, pdf_height)
+    if dashboard:
+        download_dashboard(dashboard, pdf_style, pdf_width, pdf_height)
 
 
-def get_dashboard(title: str) -> models.Dashboard:
-    """Get a dashboard by title"""
+def get_dashboard(title: str) -> Optional[models.Dashboard]:
+    """Get a dashboard by title."""
     title = title.lower()
     dashboard = next(iter(sdk.search_dashboards(title=title)), None)
     if not dashboard:
-        print(f"dashboard {title} was not found")
-    assert isinstance(dashboard, models.Dashboard)
+        print(f'Dashboard "{title}" was not found.')
     return dashboard
 
 
@@ -47,11 +48,12 @@ def download_dashboard(
         models.CreateDashboardRenderTask(dashboard_style=style),
         width,
         height,
+        pdf_paper_size="A4",
     )
 
     if not (task and task.id):
         print(f"Could not create a render task for {dashboard.title}")
-        return None
+        return
 
     # poll the render task until it completes
     elapsed = 0.0
@@ -61,7 +63,7 @@ def download_dashboard(
         if poll.status == "failure":
             print(poll)
             print(f"Render failed for {dashboard.title}")
-            return None
+            return
         elif poll.status == "success":
             break
 
@@ -70,17 +72,10 @@ def download_dashboard(
     print(f"Render task completed in {elapsed} seconds")
 
     result = sdk.render_task_results(task.id)
-    fileName = f"{dashboard.title}.pdf"
-<<<<<<< HEAD
-    with open(fileName, "wb+") as f:
+    filename = f"{dashboard.title}.pdf"
+    with open(filename, "wb+") as f:
         f.write(result)
-=======
-
-    buffer = bytearray(result)
-    with open(fileName, "wb+") as f:
-        f.write(buffer)
->>>>>>> WIP: download dashboard pdf
-    print(f"Dashboard pdf saved to {fileName}")
+    print(f"Dashboard pdf saved to {filename}")
 
 
 main()
