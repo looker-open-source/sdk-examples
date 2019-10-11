@@ -9,7 +9,7 @@ from typing import Sequence, List, Dict
 class Sheets:
     """An API for manipulating the Google Sheet containing hackathon data."""
 
-    def __init__(self, spreadsheet_id):
+    def __init__(self, spreadsheet_id: str, cred_file: str):
         scopes = [
             "https://www.googleapis.com/auth/drive",
             "https://www.googleapis.com/auth/drive.file",
@@ -17,7 +17,7 @@ class Sheets:
         ]
 
         credentials = service_account.Credentials.from_service_account_file(
-            "jaxdata-a93316beb3a0.json", scopes=scopes
+            cred_file, scopes=scopes
         )
 
         service = discovery.build("sheets", "v4", credentials=credentials)
@@ -52,8 +52,18 @@ class Sheets:
             self.create_user(
                 first_name, last_name, email, company, country, tshirt_size
             )
-        self._register_user(email, hackathon)
-        return
+        if not self._is_registered(email, hackathon):
+            self._register_user(email, hackathon)
+
+    def _is_created(self, email: str) -> bool:
+        """Check if user already exists in the users sheet."""
+        users = self.get_users()
+        found = False
+        for u in users:
+            if u["email"] == email:
+                found = True
+                break
+        return found
 
     def create_user(
         self,
@@ -86,17 +96,35 @@ class Sheets:
             body=data,
         )
         request.execute()
-        return
 
-    def _is_created(self, email: str) -> bool:
-        """Check if user already exists in the users sheet."""
-        users = self.get_users()
+    def _is_registered(self, email: str, hackathon_name: str):
+        """Check if user is already registed for a given hackathon."""
+        registrants = self.spreadsheet.get(
+            spreadsheetId=self.id, range="hackathons_users!A1:end"
+        ).execute()
         found = False
-        for u in users:
-            if u["email"] == email:
+        for u in registrants:
+            if u["email"] == email and u["hackathon_name"] == hackathon_name:
                 found = True
                 break
         return found
+
+    def _register_user(self, email: str, hackathon_name: str):
+        """Register users by adding them to hackathons_users sheet."""
+        data = {
+            "values": [
+                [email, hackathon_name, datetime.now().strftime("%m/%d/%Y"), 0, "", ""]
+            ]
+        }
+
+        request = self.spreadsheet.append(
+            spreadsheetId=self.id,
+            range="hackathons_users!A1:END",
+            insertDataOption="INSERT_ROWS",
+            valueInputOption="RAW",
+            body=data,
+        )
+        request.execute()
 
     def get_users(self):
         """Get users from the users sheets."""
