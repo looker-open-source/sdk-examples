@@ -48,7 +48,6 @@ def download_dashboard(
         models.CreateDashboardRenderTask(dashboard_style=style),
         width,
         height,
-        pdf_paper_size="A4",
     )
 
     if not (task and task.id):
