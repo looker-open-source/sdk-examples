@@ -12,13 +12,12 @@ def main() -> None:
     """Given a look id, obtain the query behind it and run it with the desired
      filter values.
 
-    https://docs.looker.com/reference/api-and-integration/api-reference/v3.1/query#implementation_notes_9  
+    https://docs.looker.com/reference/api-and-integration/api-reference/v3.1/query#implementation_notes_9  # noqa: B950
     shows an example of how filters are defined in the posted body. To set the
     same filter in this example, the script needs to be run as follows:
 
     $ python run_look_with_filters.py 5 category.name socks
-    """  # noqa:  B950
-
+    """
     look_id = sys.argv[1] if len(sys.argv) > 1 else ""
     filter_args = iter(sys.argv[2:])
     filters: Dict[str, str] = {}
@@ -39,8 +38,7 @@ def main() -> None:
 
 
 def get_look_query(id: int) -> models.Query:
-    """Returns the query associated with a given look id.
-    """
+    """Returns the query associated with a given look id."""
     try:
         look = sdk.look(id)
     except error.SDKError:
@@ -55,8 +53,7 @@ TJson = List[Dict[str, Union[str, int, float, bool, None]]]
 
 
 def run_query_with_filter(query: models.Query, filters: Dict[str, str]) -> TJson:
-    """Runs the specified query with the specified filters.
-    """
+    """Runs the specified query with the specified filters."""
     request = create_query_request(query, filters)
     try:
         json_ = sdk.run_inline_query("json", request, cache=False)
