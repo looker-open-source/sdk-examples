@@ -16,7 +16,7 @@ def main() -> None:
     shows an example of how filters are defined in the posted body. To set the
     same filter in this example, the script needs to be run as follows:
 
-    $ python run_look_with_filters.py lookId category.name socks
+    $ python run_look_with_filters.py 5 category.name socks
     """  # noqa:  B950
 
     look_id = sys.argv[1] if len(sys.argv) > 1 else ""
@@ -44,7 +44,7 @@ def get_look_query(id: int) -> models.Query:
     try:
         look = sdk.look(id)
     except error.SDKError:
-        raise exceptions.LookNotFoundError(f"Error getting Look {id}")
+        raise exceptions.NotFoundError(f"Error getting Look {id}")
     else:
         query = look.query
         assert isinstance(query, models.Query)

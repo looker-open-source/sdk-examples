@@ -1,4 +1,4 @@
-class LookNotFoundError(Exception):
+class NotFoundError(Exception):
     pass
 
 
