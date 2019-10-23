@@ -52,14 +52,18 @@ class Sheets:
 
     def register_user(self, *, hackathon: str, user: "User"):
         """Register user to a hackathon"""
-        if not self.users.is_created(user):
-            self.users.create(user)
+        is_created = self.users.is_created(user)
         registrant = Registrant(
             user_email=user.email,
             hackathon_name=hackathon,
             date_registered=datetime.datetime.now(),
             attended=None,
         )
+        is_registered = self.registrations.is_registered(registrant)
+        if is_created and is_registered:
+            raise SheetError(f"User already exists and is registered to {hackathon}")
+        if not self.users.is_created(user):
+            self.users.create(user)
         if not self.registrations.is_registered(registrant):
             self.registrations.register(registrant)
 
@@ -114,6 +118,7 @@ class WhollySheet(Generic[TModel]):
             rows = response["values"]
             data = self._convert_to_dict(rows)
             # ignoring type (mypy bug?) "Name 'self.structure' is not defined"
+            print(data)
             response = self.converter.structure(
                 data, Sequence[self.structure]  # type: ignore
             )
