@@ -8,6 +8,7 @@ from google.oauth2 import service_account  # type: ignore
 from googleapiclient import discovery  # type: ignore
 from sheets import (
     Hackathon,
+    Hackathons,
     Registrant,
     Registrations,
     Sheets,
@@ -33,7 +34,6 @@ def instantiate_whollysheet(spreadsheet_client, spreadsheet):
 @pytest.fixture(name="sheets")
 def instantiate_sheets(spreadsheet, cred_file):
     """Creates and returns an instance of Sheets"""
-    spreadsheet = spreadsheet
     return Sheets(spreadsheet_id=spreadsheet["spreadsheetId"], cred_file=cred_file)
 
 
@@ -42,6 +42,13 @@ def instantiate_users(spreadsheet_client, spreadsheet):
     """Creates and returns an instance of Users"""
     client = spreadsheet_client.values()
     return Users(client=client, spreadsheet_id=spreadsheet["spreadsheetId"])
+
+
+@pytest.fixture(name="hackathons")
+def instantiate_hackathons(spreadsheet_client, spreadsheet):
+    """Creates and returns an instance of Hackathons"""
+    client = spreadsheet_client.values()
+    return Hackathons(client=client, spreadsheet_id=spreadsheet["spreadsheetId"])
 
 
 @pytest.fixture(name="registrations")
