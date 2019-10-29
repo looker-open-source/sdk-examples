@@ -56,18 +56,15 @@ class Sheets:
 
     def register_user(self, *, hackathon: str, user: "User"):
         """Register user to a hackathon"""
-        is_created = self.users.is_created(user)
+        if not self.users.is_created(user):
+            self.users.create(user)
+
         registrant = Registrant(
             user_email=user.email,
             hackathon_name=hackathon,
             date_registered=datetime.datetime.now(),
             attended=None,
         )
-        is_registered = self.registrations.is_registered(registrant)
-        if is_created and is_registered:
-            raise SheetError(f"User already exists and is registered to {hackathon}")
-        if not self.users.is_created(user):
-            self.users.create(user)
         if not self.registrations.is_registered(registrant):
             self.registrations.register(registrant)
 
