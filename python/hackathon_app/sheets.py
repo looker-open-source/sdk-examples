@@ -58,7 +58,8 @@ class Sheets:
         """Register user to a hackathon"""
         if not self.users.is_created(user):
             self.users.create(user)
-
+        else:
+            self.users.update(user)
         registrant = Registrant(
             user_email=user.email,
             hackathon_name=hackathon,
@@ -87,6 +88,7 @@ class WhollySheet(Generic[TModel]):
     ):
         self.client = client
         self.spreadsheet_id = spreadsheet_id
+        self.sheet_name = sheet_name
         self.range = f"{sheet_name}!A1:end"
         self.structure = structure
         self.converter = converter
@@ -126,6 +128,21 @@ class WhollySheet(Generic[TModel]):
             raise SheetError(str(ex))
         return response
 
+    def update(self, model: TModel, row: int):
+        """Update user"""
+        try:
+            serialized_ = self.converter.unstructure(model)
+            serialized = self._convert_to_list(serialized_)
+            body = {"values": [serialized]}
+            self.client.update(
+                spreadsheetId=self.spreadsheet_id,
+                range=f"{self.sheet_name}!A{row}:end",
+                valueInputOption="RAW",
+                body=body,
+            ).execute()
+        except (TypeError, AttributeError):
+            raise SheetError("Could not update row")
+
     def _convert_to_dict(self, data) -> Sequence[Mapping[str, str]]:
         """Given a list of lists where the first list contains key names, convert it to
         a list of dictionaries.
@@ -159,20 +176,34 @@ class Users(WhollySheet[User]):
             sheet_name="users",
             structure=User,
         )
+        self.users = None
 
     def is_created(self, user: User) -> bool:
         """Checks if user already exists in users sheet"""
-        users = super().rows()
-        found = False
-        for u in users:
-            if u.email == user.email:
-                found = True
+        found = True if self._locate(user) else False
         return found
 
     def create(self, user: User):
         """Insert user details in the users sheet"""
         user.date_created = datetime.datetime.now()
         super().insert(user)
+
+    def update(self, user: User, row=None):
+        """Update user"""
+        row = self._locate(user)
+        if not row:
+            raise SheetError("User not found.")
+        super().update(user, row)
+
+    def _locate(self, user: User) -> Optional[int]:
+        """Locate a user and return its corresponding row number in the Users sheet"""
+        users = super().rows()
+        row_number = None
+        header_offset = 1
+        for index, u in enumerate(users):
+            if u.email == user.email:
+                row_number = index + header_offset
+        return row_number
 
 
 @attr.s(auto_attribs=True, kw_only=True)
