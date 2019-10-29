@@ -31,11 +31,12 @@ def main():
         )  # noqa: B950
 
     dashboard = get_dashboard(dashboard_title)
-    download_dashboard(dashboard, pdf_style, pdf_width, pdf_height)
+    if dashboard:
+        download_dashboard(dashboard, pdf_style, pdf_width, pdf_height)
 
 
-def get_dashboard(title: str) -> models.Dashboard:
-    """Get a dashboard by title"""
+def get_dashboard(title: str) -> Optional[models.Dashboard]:
+    """Get a dashboard by title."""
     title = title.lower()
     dashboard = next(iter(sdk.search_dashboards(title=title)), None)
     if not dashboard:
