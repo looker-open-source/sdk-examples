@@ -128,7 +128,7 @@ class WhollySheet(Generic[TModel]):
             raise SheetError(str(ex))
         return response
 
-    def update(self, model: TModel, row: int):
+    def _update(self, model: TModel, row: int):
         """Update user"""
         try:
             serialized_ = self.converter.unstructure(model)
@@ -188,12 +188,12 @@ class Users(WhollySheet[User]):
         user.date_created = datetime.datetime.now()
         super().insert(user)
 
-    def update(self, user: User, row=None):
+    def update(self, user: User):
         """Update user"""
         row = self._locate(user)
         if not row:
             raise SheetError("User not found.")
-        super().update(user, row)
+        super()._update(user, row)
 
     def _locate(self, user: User) -> Optional[int]:
         """Locate a user and return its corresponding row number in the Users sheet"""
