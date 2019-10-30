@@ -1,5 +1,7 @@
 import datetime
 
+import pytest  # type: ignore
+
 from sheets import User, Users
 
 DATE_FORMAT = "%m/%d/%Y"
@@ -76,7 +78,7 @@ def test_create_user(users: Users):
 
 def test_update_user_updates(users: Users):
     """update(user) should modify existing users in the users sheet. The user's
-    email is used to uniquely identify a user and cannot be amended.
+    email is used to uniquely identify a user and cannot be amended from the front end.
     """
     all_users = users.rows()
     updated_user = all_users[0]
@@ -86,13 +88,13 @@ def test_update_user_updates(users: Users):
     updated_user.tshirt_size = "update_size"
     users.update(updated_user)
 
-    user = None
     all_users = users.rows()
     for u in all_users:
         if u.email == updated_user.email:
             user = u
             break
-    assert user is not None
+    else:
+        pytest.fail("User not found")
     assert user.first_name == updated_user.first_name
     assert user.last_name == updated_user.last_name
     assert user.organization == updated_user.organization
