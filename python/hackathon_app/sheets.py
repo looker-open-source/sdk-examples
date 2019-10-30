@@ -199,7 +199,8 @@ class Users(WhollySheet[User]):
         """Locate a user and return its corresponding row number in the Users sheet"""
         users = super().rows()
         row_number = None
-        header_offset = 1
+        # Google Sheets are 1 indexed, with the first row being the header.
+        header_offset = 2
         for index, u in enumerate(users):
             if u.email == user.email:
                 row_number = index + header_offset
