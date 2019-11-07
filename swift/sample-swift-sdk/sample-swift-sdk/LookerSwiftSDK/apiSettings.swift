@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+import Foundation
+
 let strLookerBaseUrl = "\(Constants.environmentPrefix)_BASE_URL"
 let strLookerApiVersion = "\(Constants.environmentPrefix)_API_VERSION"
 let strLookerVerifySsl = "\(Constants.environmentPrefix)_VERIFY_SSL"
@@ -52,8 +54,8 @@ struct DefaultSettings : IApiSettings {
     func readConfig(_ section: String? = nil) -> IApiSection {
         return [:]
     }
-    var base_url: String? = ""
-    var api_version: String? = "3.1"
+    var base_url: String? = ProcessInfo.processInfo.environment[strLookerBaseUrl] ?? ""
+    var api_version: String? = ProcessInfo.processInfo.environment[strLookerApiVersion] ?? "3.1"
     var verify_ssl: Bool? = true
     var timeout: Int? = defaultTimeout
     var headers: Headers?

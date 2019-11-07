@@ -1,20 +1,13 @@
 ## Sample iOS Swift SDK Example
 
-### Setting the Looker Instance URL
+### Setting the Looker SDK configuration
 
-To set the looker instance URL go to the app delegate line 17 and set
-config.base_url to the url for the looker api you will be using. For
-example:
-
-https://foo.looker.com:19999
-
-
-### Setting client_id and client_secret
-
-There are a couple different ways to pass the client_id and 
-client_secret to the sdk. This example sets them as environment vars. 
+There are a couple different ways to configure the SDK for a Looker server. 
+This example sets them as environment variables. 
 To set the environment vars go to `Product`>`Scheme`>`Edit Scheme...` 
 and add
 
-- LOOKERSDK_CLIENT_ID
-- LOOKERSDK_CLIENT_SECRET
+- `LOOKERSDK_BASE_URL` for the Looker API server URL, like `https://foo.looker.com:19999`
+- `LOOKER_API_VERSION` as `3.1`
+- `LOOKERSDK_CLIENT_ID` for the API 3 Client ID 
+- `LOOKERSDK_CLIENT_SECRET` for the API 3 Client Secret

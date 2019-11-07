@@ -13,8 +13,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 
-        var config = ApiConfig() // Issue reading the "looker.ini" file, going to manually set the base url
-        config.base_url = "" // In the scheme make sure to set LOOKERSDK_CLIENT_ID and LOOKERSDK_CLIENT_SECRET as environment variables
+        let config = ApiConfig()
+        // In the scheme make sure to set
+        // LOOKERSDK_BASE_URL to the API server url
+        // LOOKER_SDK_API_VERSION to 3.1
+        // LOOKERSDK_CLIENT_ID to the API3 client id
+        // LOOKERSDK_CLIENT_SECRET to the 
+        // as environment variables
         let xp = BaseTransport(config)
         let auth = AuthSession(config, xp)
 

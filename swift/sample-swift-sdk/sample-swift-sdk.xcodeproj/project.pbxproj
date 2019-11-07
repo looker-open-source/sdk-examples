@@ -169,19 +169,19 @@
 		CAEB97EE237116B60050E540 /* LookerSwiftSDK */ = {
 			isa = PBXGroup;
 			children = (
-				CAEB97D82370CF3F0050E540 /* transport.swift */,
+				CAEB97D62370CF3F0050E540 /* apiConfig.swift */,
+				CAEB97DD2370CF400050E540 /* apiMethods.swift */,
+				CAEB97D12370CF3F0050E540 /* apiSettings.swift */,
+				CAEB97DB2370CF400050E540 /* authSession.swift */,
+				CAEB97DC2370CF400050E540 /* authToken.swift */,
+				CAEB97D92370CF400050E540 /* baseTransport.swift */,
+				CAEB97D72370CF3F0050E540 /* constants.swift */,
+				CAEB97D42370CF3F0050E540 /* looker.swift */,
+				CAEB97D32370CF3F0050E540 /* methods.swift */,
+				CAEB97DA2370CF400050E540 /* models.swift */,
 				CAEB97D22370CF3F0050E540 /* partial.swift */,
 				CAEB97D52370CF3F0050E540 /* serializer.swift */,
-				CAEB97DA2370CF400050E540 /* models.swift */,
-				CAEB97D32370CF3F0050E540 /* methods.swift */,
-				CAEB97D42370CF3F0050E540 /* looker.swift */,
-				CAEB97D72370CF3F0050E540 /* constants.swift */,
-				CAEB97D92370CF400050E540 /* baseTransport.swift */,
-				CAEB97DC2370CF400050E540 /* authToken.swift */,
-				CAEB97DB2370CF400050E540 /* authSession.swift */,
-				CAEB97D12370CF3F0050E540 /* apiSettings.swift */,
-				CAEB97DD2370CF400050E540 /* apiMethods.swift */,
-				CAEB97D62370CF3F0050E540 /* apiConfig.swift */,
+				CAEB97D82370CF3F0050E540 /* transport.swift */,
 			);
 			path = LookerSwiftSDK;
 			sourceTree = "<group>";
