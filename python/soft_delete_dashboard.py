@@ -1,48 +1,49 @@
 import sys
-import time
+from typing import Sequence
 
-from looker_sdk import client, models
+import exceptions
+from looker_sdk import client, error, models
 
 
-sdk = client.setup("looker.ini")
+sdk = client.setup("../looker.ini")
+
 
 def main():
-        ### INSERT TITLE HERE #####
-        dashboard_title = "LAST_TRY"
-   
+    """Given a dashboard title, get the ids of all dashboards with matching titles
+    and move them to trash.
 
-        if not dashboard_title:
-            print(
-                "Please provide: <dashboardTitle> "
-            )
-            return
+    $ python soft_delete_dashboard.py "An Unused Dashboard"
+    """
 
-        dashboard = get_dashboard(dashboard_title)
-        delete_dashboard(dashboard)
+    dashboard_title = sys.argv[1] if len(sys.argv) > 1 else ""
 
-#### GET DASHBOARD OBJECT #####
-def get_dashboard(title: str) -> models.Dashboard:
-        """Get a dashboard by title"""
-        title = title.lower()
-        dashboard = next(iter(sdk.search_dashboards(title=title)), None)
-        if not dashboard:
-            print(f"dashboard {title} was not found")
-        assert isinstance(dashboard, models.Dashboard)
-        return dashboard
+    if not dashboard_title:
+        raise exceptions.ArgumentError("Please provide: <dashboardTitle>")
+
+    dashboards = get_dashboards(dashboard_title)
+    delete_dashboards(dashboards)
 
 
-def delete_dashboard(
-        dashboard: models.Dashboard,
-    ):
-        """Download specified dashboard as PDF."""
-        assert dashboard.id
-        id = int(dashboard.id)
-        ### ID SHOULD BE THE SAME AS IN URL OF DASHBOARD YOU ARE ATTEMPTING TO DELETE ###
-        #print(id)
+def get_dashboards(title: str) -> Sequence[models.Dashboard]:
+    """Get dashboards with matching title"""
+    lc_title = title.lower()
+    results = sdk.search_dashboards(title=lc_title)
+    if not results:
+        raise exceptions.NotFoundError(f'dashboard "{title}" not found')
+    assert isinstance(results, Sequence)
+    return results
 
-        task = sdk.delete_dashboard(
-            id
-        )
+
+def delete_dashboards(dashboards: Sequence[models.Dashboard]):
+    """Soft delete dashboards"""
+    for dashboard in dashboards:
+        try:
+            assert dashboard.id
+            sdk.delete_dashboard(dashboard.id)
+        except error.SDKError:
+            print(f"Failed to delete dashboard with id {dashboard.id}.")
+        else:
+            print(f'"{dashboard.title}" (id {dashboard.id}) has been moved to trash.')
 
 
 main()
