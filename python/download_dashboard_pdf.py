@@ -1,8 +1,8 @@
-import ast
+import json
 import urllib
 import sys
-import time
 import textwrap
+import time
 from typing import cast, Dict, Optional
 
 import exceptions
@@ -17,11 +17,11 @@ def main():
 
     Examples of how to use this:
     $ python download_dashboard_pdf.py "A Test Dashboard"
-    $ python download_dashboard_pdf.py "A Test Dashboard" "{'filter1': 'value1, value2', 'filter2': 'value3'}"
+    $ python download_dashboard_pdf.py "A Test Dashboard" '{"filter1": "value1, value2", "filter2": "value3"}'
     $ python download_dashboard_pdf.py "A Test Dashboard" {} "single_column"
     """
     dashboard_title = sys.argv[1] if len(sys.argv) > 1 else ""
-    filters = ast.literal_eval(sys.argv[2]) if len(sys.argv) > 2 else None
+    filters = json.loads(sys.argv[2]) if len(sys.argv) > 2 else None
     pdf_style = sys.argv[3] if len(sys.argv) > 3 else "tiled"
     pdf_width = int(sys.argv[4]) if len(sys.argv) > 4 else 545
     pdf_height = int(sys.argv[5]) if len(sys.argv) > 5 else 842
@@ -38,7 +38,7 @@ def main():
         )
 
     dashboard = cast(models.Dashboard, get_dashboard(dashboard_title))
-    download_dashboard(dashboard, filters, pdf_style, pdf_width, pdf_height)
+    download_dashboard(dashboard, pdf_style, pdf_width, pdf_height, filters)
 
 
 def get_dashboard(title: str) -> Optional[models.Dashboard]:
@@ -53,10 +53,10 @@ def get_dashboard(title: str) -> Optional[models.Dashboard]:
 
 def download_dashboard(
     dashboard: models.Dashboard,
-    filters: Optional[Dict[str, str]],
-    style: str,
-    width: int,
-    height: int,
+    style: str = "tiled",
+    width: int = 545,
+    height: int = 842,
+    filters: Optional[Dict[str, str]] = None,
 ):
     """Download specified dashboard as PDF"""
     assert dashboard.id
