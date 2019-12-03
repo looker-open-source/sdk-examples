@@ -15,10 +15,13 @@ def main():
     """Given a dashboard title, search all dashboards to retrieve its id and use
     it to render the dashboard's pdf.
 
+    Examples of how to use this:
+    $ python download_dashboard_pdf.py "A Test Dashboard"
     $ python download_dashboard_pdf.py "A Test Dashboard" "{'filter1': 'value1, value2', 'filter2': 'value3'}"
+    $ python download_dashboard_pdf.py "A Test Dashboard" {} "single_column"
     """
     dashboard_title = sys.argv[1] if len(sys.argv) > 1 else ""
-    filters = ast.literal_eval(sys.argv[2]) if len(sys.argv) > 2 else ""
+    filters = ast.literal_eval(sys.argv[2]) if len(sys.argv) > 2 else None
     pdf_style = sys.argv[3] if len(sys.argv) > 3 else "tiled"
     pdf_width = int(sys.argv[4]) if len(sys.argv) > 4 else 545
     pdf_height = int(sys.argv[5]) if len(sys.argv) > 5 else 842
@@ -50,7 +53,7 @@ def get_dashboard(title: str) -> Optional[models.Dashboard]:
 
 def download_dashboard(
     dashboard: models.Dashboard,
-    filters: Dict[str, str],
+    filters: Optional[Dict[str, str]],
     style: str,
     width: int,
     height: int,
@@ -62,7 +65,8 @@ def download_dashboard(
         id,
         "pdf",
         models.CreateDashboardRenderTask(
-            dashboard_style=style, dashboard_filters=urllib.parse.urlencode(filters)
+            dashboard_style=style,
+            dashboard_filters=urllib.parse.urlencode(filters) if filters else None,
         ),
         width,
         height,
