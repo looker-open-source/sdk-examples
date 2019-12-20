@@ -72,9 +72,15 @@ def parse_broken_content(base_url, broken_content, space_data):
             content_type = 'look'
         item_content_type = getattr(item, content_type)
         id = item_content_type.id
+<<<<<<< HEAD
         name = item_content_type.title
         space_id = item_content_type.space.id
         space_name = item_content_type.space.name
+=======
+        print(id)
+        # id = getattr(item, content_type).id
+        name = getattr(item, content_type).title
+>>>>>>> 98ddac7e4d267f772a29f1699cde74df352f6def
         errors = item.errors
         url =  f'{base_url}/{content_type}s/{id}'
         space_url = '{}/spaces/{}'.format(base_url,space_id)
