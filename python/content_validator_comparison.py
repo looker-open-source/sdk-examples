@@ -77,7 +77,7 @@ def parse_broken_content(base_url, broken_content, space_data):
         errors = item.errors
         space_id = getattr(item, content_type).space.id
         space_name = getattr(item, content_type).space.name
-        url =  '{}/{}s/{}'.format(base_url,content_type,id)
+        url =  f'{base_url}/{content_type}s/{id}'
         space_url = '{}/spaces/{}'.format(base_url,space_id)
         if content_type == 'look':
                 element = None
