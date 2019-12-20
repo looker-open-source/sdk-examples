@@ -42,7 +42,6 @@ def main():
     else:
         print('No new broken content in development branch.')
 
-
 def get_base_url():
     """ Pull base url from looker.ini, remove port"""
     config = configparser.ConfigParser()
@@ -50,7 +49,6 @@ def get_base_url():
     full_base_url = config.get('Looker', 'base_url')
     base_url = sdk.auth.settings.base_url[:full_base_url.index(":19999")]
     return base_url
-
 
 def get_space_data():
     """Collect all space information"""
@@ -72,7 +70,10 @@ def parse_broken_content(base_url, broken_content, space_data):
             content_type = 'dashboard'
         else:
             content_type = 'look'
-        id = getattr(item, content_type).id
+        item_content_type = getattr(item, content_type)
+        id = item_content_type.id
+        print(id)
+        # id = getattr(item, content_type).id
         name = getattr(item, content_type).title
         errors = item.errors
         space_id = getattr(item, content_type).space.id
