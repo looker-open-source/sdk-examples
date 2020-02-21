@@ -1,5 +1,6 @@
 import React from 'react'
 import {Button, Heading, Paragraph, Divider} from '@looker/components'
+import i18n from './i18n'
 
 export const ResourcesScene: React.FC<{path: string}> = ({path}) => {
   const [name, setName] = React.useState('')
@@ -36,15 +37,16 @@ export const ResourcesScene: React.FC<{path: string}> = ({path}) => {
   return (
     <>
       <Heading as="h1">Looker Hackathons</Heading>
-      <Paragraph>Find information on Hackathons below</Paragraph>
+      <Paragraph>{i18n.t('Find information on Hackathons below')}</Paragraph>
       <Divider my="large" />
-      <Heading>{message}</Heading>
+      <Heading>{i18n.t(message)}</Heading>
       <Paragraph mb="large">
-        Explore the links below to find useful documentation and tools for
-        participating in a hackathon.
+        {i18n.t(
+          'Explore the links below to find useful documentation and tools for participating in a hackathon.'
+        )}
       </Paragraph>
       <Button forwardedAs="a" href="/registration" mr="large">
-        Register for a Hackathon
+        {i18n.t('Register for a Hackathon')}
       </Button>
       <Button forwardedAs="a" href="//lookerhack.slack.com/">
         Slack
