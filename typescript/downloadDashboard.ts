@@ -22,9 +22,9 @@
  * THE SOFTWARE.
  */
 
-import { NodeSettingsIniFile, NodeSession, Looker40SDK as LookerSDK, IDashboardElement } from '@looker/sdk'
+import { NodeSettingsIniFile, NodeSession, Looker40SDK as LookerSDK, IDashboard, IRequestCreateDashboardRenderTask } from '@looker/sdk'
 import * as fs from 'fs'
-import { getDashboard, getDashboardTile, waitForRender } from './utils'
+import { getDashboard, waitForRender } from './utils'
 
 /**
  *
@@ -52,40 +52,42 @@ const sdk = new LookerSDK(session)
 
 /**
  * Read command-line parameters. Still have a bug for png argument
- * @returns {{dashboardTitle: string, tileTitle: string, renderFormat: string}}
+ * @returns {{dashboardTitle: string, renderFormat: string}}
  */
 const getParams = () => {
   const offset = 1
   return {
     dashboardTitle: (process.argv.length > offset + 1) ? process.argv[offset + 1] : '',
-    tileTitle: (process.argv.length > offset + 2) ? process.argv[offset + 2] : '',
-    renderFormat: (process.argv.length > offset + 3) ? process.argv[offset + 3] : 'png'
+    renderFormat: (process.argv.length > offset + 2) ? process.argv[offset + 2] : 'pdf'
   }
 }
 
 /**
  * Download a dashboard tile when it's finished rendering
  * @param {LookerSDK} sdk initialized Looker SDK
- * @param {IDashboardElement} tile Dashboard tile to render
+ * @param {IDashboard} dashboard to download
  * @param {string} format format of rendering
  * @returns {Promise<undefined | string>} Name of file downloaded
  */
-const downloadTile = async (sdk: LookerSDK, tile: IDashboardElement, format: string) => {
+const downloadDashboard = async (sdk: LookerSDK, dashboard: IDashboard, format: string) => {
   let fileName = undefined
-  if (!tile.query_id) {
-    console.error(`Tile ${tile.title} does not have a query`)
-    return
-  }
   try {
-    const task = await sdk.ok(sdk.create_query_render_task(tile.query_id, format, 640, 480))
+    const req : IRequestCreateDashboardRenderTask = {
+      dashboard_id: Number(dashboard.id!),
+      result_format: format,
+      body: {},
+      width: 1920,
+      height: 1080
+    }
+    const task = await sdk.ok(sdk.create_dashboard_render_task(req))
 
     if (!task || !task.id) {
-      console.error(`Could not create a render task for ${tile.title}`)
+      console.error(`Could not create a render task for ${dashboard.title}`)
       return
     }
 
     const result = await waitForRender(sdk, task.id!)
-    fileName = `${tile.title}.${format}`
+    fileName = `${dashboard.title}.${format}`
     fs.writeFile(fileName, result, 'binary',(err) => {
         if (err) {
           fileName = undefined
@@ -101,21 +103,18 @@ const downloadTile = async (sdk: LookerSDK, tile: IDashboardElement, format: str
 }
 
 (async () => {
-  const { dashboardTitle, tileTitle, renderFormat } = getParams()
-  if (!dashboardTitle || !tileTitle) {
-    console.warn('Please provide: <dashboardTitle> <titeTitle> [<renderFormat>]')
-    console.warn('  renderFormat defaults to "png". jpg is also allowed.')
+  const { dashboardTitle, renderFormat } = getParams()
+  if (!dashboardTitle) {
+    console.warn('Please provide: <dashboardTitle> [<renderFormat>]')
+    console.warn('  renderFormat defaults to "pdf". jpg and png are also allowed.')
     return
   }
-  console.log(`Rendering dashboard "${dashboardTitle}" tile "${tileTitle}" as ${renderFormat} ...`)
+  console.log(`Rendering dashboard "${dashboardTitle}" as ${renderFormat} ...`)
 
   const dashboard = await getDashboard(sdk, dashboardTitle)
   if (dashboard) {
-    const tile = getDashboardTile(dashboard, tileTitle)
-    if (tile) {
-      const fileName = await downloadTile(sdk, tile, renderFormat)
-      console.log(`open ${fileName} to see the download`)
-    }
+    const fileName = await downloadDashboard(sdk, dashboard, renderFormat)
+    console.log(`open ${fileName} to see the download`)
   }
 
   await sdk.authSession.logout() // logout of API session
