@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-import { NodeSettingsIniFile, NodeSession, LookerSDK, IAuthSession } from '@looker/sdk'
+import { NodeSettingsIniFile, NodeSession, Looker40SDK as LookerSDK, IAuthSession } from '@looker/sdk'
 
 /**
  *
@@ -61,7 +61,8 @@ const matchDomain = '%@looker.com'
  * @returns {Promise<undefined | IUser>} Returns the first matched user, or undefined if no match
  */
 const anyoneButMe = async (userId: number, emailPattern: string) => {
-  const all = await sdk.ok(sdk.search_users({email: emailPattern, page: 0, per_page: 2}))
+  const all = await sdk.ok(sdk.search_users({email: emailPattern, page: 1, per_page: 2}))
+  // const all = await sdk.ok(sdk.search_users({email: emailPattern, page: 0, per_page: 2}))
   if (!all || all.length === 0) {
     console.warn(`No matches for ${emailPattern}`)
     return undefined
