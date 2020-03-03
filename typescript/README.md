@@ -21,5 +21,5 @@ Very brief descriptions of the examples and the link to the main example/project
 * [sudo as another user](sudoAsUser.ts)
 
 ### Data downloads
-* [download a dashboard tile by name with a specified render format](downloadTile.ts) (PNG, JPG)
+* [download a dashboard tile by name with a specified output format](downloadTile.ts) (PNG, JPG, CSV, JSON, and all the rest)
 * [download a dashboard by name with a specified render format](downloadDashboard.ts) (PDF, PNG, JPG)

@@ -58,12 +58,12 @@ const getParams = () => {
   const offset = 1
   return {
     dashboardTitle: (process.argv.length > offset + 1) ? process.argv[offset + 1] : '',
-    renderFormat: (process.argv.length > offset + 2) ? process.argv[offset + 2] : 'pdf'
+    outputFormat: (process.argv.length > offset + 2) ? process.argv[offset + 2] : 'pdf'
   }
 }
 
 /**
- * Download a dashboard tile when it's finished rendering
+ * Download a dashboard using a render task
  * @param {LookerSDK} sdk initialized Looker SDK
  * @param {IDashboard} dashboard to download
  * @param {string} format format of rendering
@@ -103,17 +103,17 @@ const downloadDashboard = async (sdk: LookerSDK, dashboard: IDashboard, format: 
 }
 
 (async () => {
-  const { dashboardTitle, renderFormat } = getParams()
+  const { dashboardTitle, outputFormat } = getParams()
   if (!dashboardTitle) {
-    console.warn('Please provide: <dashboardTitle> [<renderFormat>]')
-    console.warn('  renderFormat defaults to "pdf". jpg and png are also allowed.')
+    console.warn('Please provide: <dashboardTitle> [<outputFormat>]')
+    console.warn('  outputFormat defaults to "pdf". png and jpg are also supported.')
     return
   }
-  console.log(`Rendering dashboard "${dashboardTitle}" as ${renderFormat} ...`)
+  console.log(`Rendering dashboard "${dashboardTitle}" as ${outputFormat} ...`)
 
   const dashboard = await getDashboard(sdk, dashboardTitle)
   if (dashboard) {
-    const fileName = await downloadDashboard(sdk, dashboard, renderFormat)
+    const fileName = await downloadDashboard(sdk, dashboard, outputFormat)
     console.log(`open ${fileName} to see the download`)
   }
 

@@ -33,7 +33,7 @@ import { Looker40SDK as LookerSDK, IDashboard, IRenderTask } from '@looker/sdk'
 export const getDashboard = async (sdk: LookerSDK, title: string) => {
   const [dash] = await sdk.ok(sdk.search_dashboards({title}))
   if (!dash) {
-    console.warn(`No dashboard titled ${title} was found`)
+    console.warn(`No dashboard titled "${title}" was found`)
   }
   return dash
 }
@@ -49,7 +49,7 @@ export const getDashboardTile = (dash: IDashboard, title: string) => {
   if (!dash.dashboard_elements) return undefined
   const [tile]= dash.dashboard_elements.filter(t => String(t.title).toLowerCase() === title)
   if (!tile) {
-    console.warn(`No tile titled ${title} found on ${dash.title}`)
+    console.warn(`No tile titled "${title}" found on Dashboard "${dash.title}"`)
   }
   return tile
 }
