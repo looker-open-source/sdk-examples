@@ -34,6 +34,9 @@ export const getDashboard = async (sdk: LookerSDK, title: string) => {
   const [dash] = await sdk.ok(sdk.search_dashboards({title}))
   if (!dash) {
     console.warn(`No dashboard titled "${title}" was found`)
+    const all = await sdk.ok(sdk.all_dashboards("id,title"))
+    const titles = all.map(t => `${t.id}:${t.title}`)
+    console.log(`Available dashboards are:\n${titles.join('\n')}\n`)
   }
   return dash
 }
@@ -50,6 +53,10 @@ export const getDashboardTile = (dash: IDashboard, title: string) => {
   const [tile]= dash.dashboard_elements.filter(t => String(t.title).toLowerCase() === title)
   if (!tile) {
     console.warn(`No tile titled "${title}" found on Dashboard "${dash.title}"`)
+    const tiles = dash.dashboard_elements
+      .filter(t => typeof t.query_id == 'number')
+      .map(t => t.title)
+    console.log(`Available tiles with queries are:\n${tiles.join("\n")}\n`)
   }
   return tile
 }

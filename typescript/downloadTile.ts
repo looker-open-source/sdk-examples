@@ -27,7 +27,7 @@ import {
   NodeSession,
   Looker40SDK as LookerSDK,
   IDashboardElement,
-  IRequestRunQuery,
+  IRequestRunQuery
 } from '@looker/sdk'
 import * as fs from 'fs'
 import { getDashboard, getDashboardTile, waitForRender } from './utils'
@@ -64,9 +64,11 @@ const sdk = new LookerSDK(session)
 const getParams = () => {
   const offset = 1
   return {
-    dashboardTitle: (process.argv.length > offset + 1) ? process.argv[offset + 1] : '',
-    tileTitle: (process.argv.length > offset + 2) ? process.argv[offset + 2] : '',
-    outputFormat: (process.argv.length > offset + 3) ? process.argv[offset + 3] : 'png'
+    dashboardTitle:
+      process.argv.length > offset + 1 ? process.argv[offset + 1] : '',
+    tileTitle: process.argv.length > offset + 2 ? process.argv[offset + 2] : '',
+    outputFormat:
+      process.argv.length > offset + 3 ? process.argv[offset + 3] : 'png'
   }
 }
 
@@ -92,9 +94,17 @@ const isRenderable = (format: string) => {
  * **Note:** run_query can also be used for PNG and JPG output, but this function will show an elapsed time ticker via
  * the `waitForRender()` callback as the render is progressing
  */
-const renderTile = async (sdk: LookerSDK, tile: IDashboardElement, format: string, width: number = 640, height: number = 480) => {
+const renderTile = async (
+  sdk: LookerSDK,
+  tile: IDashboardElement,
+  format: string,
+  width: number = 640,
+  height: number = 480
+) => {
   let fileName = undefined
-  const task = await sdk.ok(sdk.create_query_render_task(tile.query_id!, format, width, height))
+  const task = await sdk.ok(
+    sdk.create_query_render_task(tile.query_id!, format, width, height)
+  )
 
   if (!task || !task.id) {
     throw `Could not create a render task for ${tile.title}`
@@ -102,13 +112,12 @@ const renderTile = async (sdk: LookerSDK, tile: IDashboardElement, format: strin
 
   const result = await waitForRender(sdk, task.id!)
   fileName = `${tile.title}.${format}`
-  fs.writeFile(fileName, result, 'binary',(err) => {
-      if (err) {
-        fileName = undefined // no file was created
-        throw err
-      }
+  fs.writeFile(fileName, result, 'binary', err => {
+    if (err) {
+      fileName = undefined // no file was created
+      throw err
     }
-  )
+  })
   return fileName
 }
 
@@ -119,23 +128,29 @@ const renderTile = async (sdk: LookerSDK, tile: IDashboardElement, format: strin
  * @param {string} format to download
  * @returns {Promise<string>} name of downloaded file (undefined on failure)
  */
-const downloadTileAs = async (sdk: LookerSDK, tile: IDashboardElement, format: string) => {
+const downloadTileAs = async (
+  sdk: LookerSDK,
+  tile: IDashboardElement,
+  format: string
+) => {
   let fileName = undefined
   fileName = `${tile.title}.${format}`
 
   const writer = fs.createWriteStream(fileName)
   const request: IRequestRunQuery = {
     result_format: format,
-    query_id: tile.query_id!,
+    query_id: tile.query_id!
     // apply_formatting: true,
     // apply_vis: true
   }
   await sdk.stream.run_query(async (readable: Readable) => {
     return new Promise<any>((resolve, reject) => {
-      readable.pipe(writer)
+      readable
+        .pipe(writer)
         .on('error', () => {
           fileName = undefined
-          throw reject })
+          throw reject
+        })
         .on('finish', resolve)
     })
   }, request)
@@ -150,7 +165,11 @@ const downloadTileAs = async (sdk: LookerSDK, tile: IDashboardElement, format: s
  * @param {string} format format of rendering
  * @returns {Promise<undefined | string>} Name of file downloaded
  */
-const downloadTile = async (sdk: LookerSDK, tile: IDashboardElement, format: string) => {
+const downloadTile = async (
+  sdk: LookerSDK,
+  tile: IDashboardElement,
+  format: string
+) => {
   let fileName = undefined
   if (!tile.query_id) {
     console.error(`Tile ${tile.title} does not have a query`)
@@ -169,16 +188,19 @@ const downloadTile = async (sdk: LookerSDK, tile: IDashboardElement, format: str
   }
   return fileName
 }
-
-(async () => {
+;(async () => {
   const { dashboardTitle, tileTitle, outputFormat } = getParams()
   if (!dashboardTitle || !tileTitle) {
     console.warn('Please provide: <dashboardTitle> <titeTitle> [<ouputFormat>]')
-    console.warn('  outputFormat defaults to "png". Many other formats are also supported. Refer to the run_query documentation for options.')
+    console.warn(
+      '  outputFormat defaults to "png". Many other formats are also supported. Refer to the run_query documentation for options.'
+    )
     return
   }
   const action = isRenderable(outputFormat) ? 'Rendering' : 'Downloading'
-  console.log(`${action} dashboard "${dashboardTitle}" tile "${tileTitle}" as ${outputFormat} ...`)
+  console.log(
+    `${action} dashboard "${dashboardTitle}" tile "${tileTitle}" as ${outputFormat} ...`
+  )
 
   const dashboard = await getDashboard(sdk, dashboardTitle)
   if (dashboard) {
@@ -193,5 +215,4 @@ const downloadTile = async (sdk: LookerSDK, tile: IDashboardElement, format: str
   if (!sdk.authSession.isAuthenticated()) {
     console.log('Logout successful')
   }
-
 })()

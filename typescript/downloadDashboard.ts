@@ -22,7 +22,13 @@
  * THE SOFTWARE.
  */
 
-import { NodeSettingsIniFile, NodeSession, Looker40SDK as LookerSDK, IDashboard, IRequestCreateDashboardRenderTask } from '@looker/sdk'
+import {
+  NodeSettingsIniFile,
+  NodeSession,
+  Looker40SDK as LookerSDK,
+  IDashboard,
+  IRequestCreateDashboardRenderTask
+} from '@looker/sdk'
 import * as fs from 'fs'
 import { getDashboard, waitForRender } from './utils'
 
@@ -57,8 +63,10 @@ const sdk = new LookerSDK(session)
 const getParams = () => {
   const offset = 1
   return {
-    dashboardTitle: (process.argv.length > offset + 1) ? process.argv[offset + 1] : '',
-    outputFormat: (process.argv.length > offset + 2) ? process.argv[offset + 2] : 'pdf'
+    dashboardTitle:
+      process.argv.length > offset + 1 ? process.argv[offset + 1] : '',
+    outputFormat:
+      process.argv.length > offset + 2 ? process.argv[offset + 2] : 'pdf'
   }
 }
 
@@ -69,10 +77,14 @@ const getParams = () => {
  * @param {string} format format of rendering
  * @returns {Promise<undefined | string>} Name of file downloaded
  */
-const downloadDashboard = async (sdk: LookerSDK, dashboard: IDashboard, format: string) => {
+const downloadDashboard = async (
+  sdk: LookerSDK,
+  dashboard: IDashboard,
+  format: string
+) => {
   let fileName = undefined
   try {
-    const req : IRequestCreateDashboardRenderTask = {
+    const req: IRequestCreateDashboardRenderTask = {
       dashboard_id: Number(dashboard.id!),
       result_format: format,
       body: {},
@@ -88,25 +100,25 @@ const downloadDashboard = async (sdk: LookerSDK, dashboard: IDashboard, format: 
 
     const result = await waitForRender(sdk, task.id!)
     fileName = `${dashboard.title}.${format}`
-    fs.writeFile(fileName, result, 'binary',(err) => {
-        if (err) {
-          fileName = undefined
-          console.error(err)}
+    fs.writeFile(fileName, result, 'binary', err => {
+      if (err) {
+        fileName = undefined
+        console.error(err)
       }
-    )
-
+    })
   } catch (err) {
     console.error(`'${format}' is probably not a valid format`)
     console.error(err)
   }
   return fileName
 }
-
-(async () => {
+;(async () => {
   const { dashboardTitle, outputFormat } = getParams()
   if (!dashboardTitle) {
     console.warn('Please provide: <dashboardTitle> [<outputFormat>]')
-    console.warn('  outputFormat defaults to "pdf". png and jpg are also supported.')
+    console.warn(
+      '  outputFormat defaults to "pdf". png and jpg are also supported.'
+    )
     return
   }
   console.log(`Rendering dashboard "${dashboardTitle}" as ${outputFormat} ...`)
@@ -121,5 +133,4 @@ const downloadDashboard = async (sdk: LookerSDK, dashboard: IDashboard, format: 
   if (!sdk.authSession.isAuthenticated()) {
     console.log('Logout successful')
   }
-
 })()
