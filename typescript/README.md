@@ -16,6 +16,8 @@ to run a Typescript SDK example file.
 
 Very brief descriptions of the examples and the link to the main example/project file are provided here. For more information on an example, look at the source file.
 
+* [multiple API versions in the same file](dual.ts)
+
 ### User management
 
 * [sudo as another user](sudoAsUser.ts)
