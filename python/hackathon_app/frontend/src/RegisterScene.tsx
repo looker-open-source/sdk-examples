@@ -1,3 +1,4 @@
+import i18n from './i18n'
 import {
   Button,
   Box,
@@ -34,7 +35,9 @@ const ValidatedFieldCheckbox: React.FC<FieldProps> = ({
   return (
     <FieldCheckbox
       validationMessage={
-        error && touch ? {type: 'error', message: error as string} : undefined
+        error && touch
+          ? {type: 'error', message: i18n.t('checkboxError', {error})}
+          : undefined
       }
       {...field}
       {...props}
@@ -49,10 +52,16 @@ const ValidatedFieldText: React.FC<FieldProps> = ({
 }) => {
   const error = errors[field.name]
   const touch = touched[field.name]
+  const key =
+    error === 'email must be a valid email'
+      ? 'textFieldValidationError'
+      : 'textFieldMissingError'
   return (
     <FieldText
       validationMessage={
-        error && touch ? {type: 'error', message: error as string} : undefined
+        error && touch
+          ? {type: 'error', message: i18n.t(key, {field: `$t(${field.name})`})}
+          : undefined
       }
       {...field}
       {...props}
@@ -81,7 +90,10 @@ const TshirtSize: React.FC<FieldProps> = ({
         <ButtonItem>XXL</ButtonItem>
       </ButtonToggle>
       {error && touch && (
-        <ValidationMessage type="error" message={error as string} />
+        <ValidationMessage
+          type="error"
+          message={i18n.t('checkboxError', {error})}
+        />
       )}
     </Box>
   )
@@ -97,7 +109,9 @@ const ValidatedFieldSelect: React.FC<FieldProps> = ({
   return (
     <FieldSelect
       validationMessage={
-        error && touch ? {type: 'error', message: error as string} : undefined
+        error && touch
+          ? {type: 'error', message: i18n.t(error as string)}
+          : undefined
       }
       {...field}
       {...props}
@@ -214,10 +228,10 @@ export const RegisterScene: React.FC<{path: string}> = () => {
 
   return (
     <>
-      <Heading as="h1">Hackathon Registration</Heading>
-      <Paragraph>Register for a Hackathon below</Paragraph>
+      <Heading as="h1">{i18n.t('Hackathon Registration')}</Heading>
+      <Paragraph>{i18n.t('Register for a Hackathon below')}</Paragraph>
       <Divider my="large" />
-      <Heading mb="medium">Registration</Heading>
+      <Heading mb="medium">{i18n.t('Registration')}</Heading>
       <GoogleLogin
         clientId="280777447286-iigstshu4o2tnkp5fjucrd3nvq03g5hs.apps.googleusercontent.com"
         onSuccess={responseGoogle}
@@ -303,42 +317,42 @@ export const RegisterScene: React.FC<{path: string}> = () => {
             <Form>
               <Field type="hidden" name="csrf_token" value={csrfToken} />
               <Field
-                label="First Name"
+                label={i18n.t('First Name')}
                 component={ValidatedFieldText}
                 name="first_name"
-                placeholder="First Name"
+                placeholder={i18n.t('First Name')}
               />
               <Field
-                label="Last Name"
+                label={i18n.t('Last Name')}
                 component={ValidatedFieldText}
                 name="last_name"
-                placeholder="Last Name"
+                placeholder={i18n.t('Last Name')}
               />
               <Field
-                label="Email"
+                label={i18n.t('Email')}
                 component={ValidatedFieldText}
                 name="email"
-                placeholder="Email Address"
+                placeholder={i18n.t('Email Address')}
               />
               <Field
-                label="Organization"
+                label={i18n.t('Organization')}
                 component={ValidatedFieldText}
                 name="organization"
-                placeholder="Organization"
+                placeholder={i18n.t('Organization')}
               />
               <Field
-                label="Role"
+                label={i18n.t('Role')}
                 component={ValidatedFieldText}
                 name="role"
-                placeholder="Role"
+                placeholder={i18n.t('Role')}
               />
               <HackathonSelect hackathons={hackathons} />
-              <Label>T-Shirt Size</Label>
+              <Label>{i18n.t('T-Shirt Size')}</Label>
               <Field name="tshirt_size" component={TshirtSize} />
               <Field
                 name="ndaq"
                 type="checkbox"
-                label="I agree to the Terms and Conditions/NDAQ"
+                label={i18n.t('I agree to the Terms and Conditions/NDAQ')}
                 alignLabel="right"
                 labelWidth="auto"
                 component={ValidatedFieldCheckbox}
@@ -347,7 +361,7 @@ export const RegisterScene: React.FC<{path: string}> = () => {
               <Field
                 name="code_of_conduct"
                 type="checkbox"
-                label="I agree to the Code of Conduct"
+                label={i18n.t('I agree to the Code of Conduct')}
                 alignLabel="right"
                 labelWidth="auto"
                 component={ValidatedFieldCheckbox}
@@ -356,7 +370,7 @@ export const RegisterScene: React.FC<{path: string}> = () => {
               <Field
                 name="contributing"
                 type="checkbox"
-                label="I agree to the Contribution Guidelines"
+                label={i18n.t('I agree to the Contribution Guidelines')}
                 alignLabel="right"
                 labelWidth="auto"
                 component={ValidatedFieldCheckbox}
@@ -370,7 +384,7 @@ export const RegisterScene: React.FC<{path: string}> = () => {
               {status && <div>{status}</div>}
               <Flex alignItems="center" mt="medium">
                 {isSubmitting && <Spinner mr="small" />}
-                <Button disabled={isSubmitting}>Register</Button>
+                <Button disabled={isSubmitting}>{i18n.t('Register')}</Button>
               </Flex>
             </Form>
           )

@@ -1,0 +1,10 @@
+{
+  "Register for a Hackathon": "Registrati per un hackathon",
+  "textFieldMissingError": "{{field}} è obbligatorio",
+  "textFieldValidationError": "{{field}} deve essere valido",
+  "first_name": "nome",
+  "last_name": "congnome",
+  "email": "email",
+  "organization": "organizzazione",
+  "role": "ruolo"
+}
