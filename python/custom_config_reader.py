@@ -26,7 +26,7 @@ class CustomConfigReader(tp.TransportSettings):
         return "client_id"
 
     def get_client_secret(self) -> str:
-        return "client_id"
+        return "client_secret"
 
 
 def main():
