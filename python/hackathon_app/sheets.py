@@ -28,6 +28,21 @@ class RegisterUser:
     tshirt_size: str = ""
 
 
+def get_sheet_schema_lines() -> str:
+    """
+    Return the schema lines for the declared Sheets structure
+    This output can be written directly to a file
+    """
+    lines = ""
+    for item in [User(), Hackathon(), Registration(), Project()]:
+        lines += f"{item.get_schema_line()}\n"
+    return lines
+
+
+def get_sheet_schema() -> schema.SchemaSheet:
+    """Return the schema structure for the declared Sheets structure"""
+    return schema.SchemaSheet(get_sheet_schema_lines())
+
 class Sheets:
     """An API for manipulating the Google Sheet containing hackathon data."""
 
@@ -70,7 +85,7 @@ class Sheets:
         user.role = register_user.role
         user.tshirt_size = register_user.tshirt_size
         self.users.save(user)
-        registrant = Registrant(
+        registrant = Registration(
             user_id=user.id, hackathon_id=register_user.hackathon_id
         )
         if not self.registrations.is_registered(registrant):
@@ -78,9 +93,6 @@ class Sheets:
 
         return user
 
-    def get_schema(self) -> schema.SchemaSheet:
-
-        tabs/columns
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Model:
@@ -89,15 +101,18 @@ class Model:
         default=attr.Factory(lambda: str(uuid.uuid4()))
     )
 
-    def property_names(self) -> List[str]:
+    def get_property_names(self) -> List[str]:
         fields = [f.name for f in attr.fields(self.__class__)]
         fields.pop(0)
         return fields
 
-    def schema(self) -> schema.SchemaTab:
-        fields = ",".join(self.property_names())
-        line = f"{type(self).__name__.lower()}:{fields}"
-        return schema.SchemaTab(line=line)
+    def get_schema_line(self) -> str:
+        fields = ",".join(self.get_property_names())
+        line = f"{type(self).__name__.lower()}s:{fields}"  # Pluralize for tab name convention
+        return line
+
+    def get_schema(self) -> schema.SchemaTab:
+        return schema.SchemaTab(line=self.get_schema_line())
 
 
 TModel = TypeVar("TModel", bound=Model)
@@ -255,11 +270,13 @@ class Users(WhollySheet[User]):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Hackathon(Model):
-    label: str  ## TODO change to "name"
-    description: str
-    location: str
-    date: datetime.datetime
-    duration_in_days: int
+    label: str = ""  # TODO change to "name"
+    description: str = ""
+    location: str = ""
+    date: datetime.datetime = attr.ib(
+        default=attr.Factory(lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    )
+    duration_in_days: int = 1
 
 
 class Hackathons(WhollySheet[Hackathon]):
@@ -289,24 +306,26 @@ class Hackathons(WhollySheet[Hackathon]):
 
 
 @attr.s(auto_attribs=True, kw_only=True)
-class Registrant(Model):
-    user_id: str
-    hackathon_id: str
-    date_registered: Optional[datetime.datetime] = None
+class Registration(Model):
+    user_id: str = ""
+    hackathon_id: str = ""
+    date_registered: datetime.datetime = attr.ib(
+        default=attr.Factory(lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    )
     attended: Optional[bool] = None
 
 
-class Registrations(WhollySheet[Registrant]):
+class Registrations(WhollySheet[Registration]):
     def __init__(self, *, client, spreadsheet_id: str):
         super().__init__(
             client=client,
             spreadsheet_id=spreadsheet_id,
             sheet_name="registrations",
-            structure=Registrant,
+            structure=Registration,
             key="hackathon_id",
         )
 
-    def is_registered(self, registrant: Registrant) -> bool:
+    def is_registered(self, registrant: Registration) -> bool:
         """Check if registrant is already registered"""
         registrants = super().rows()
         registered = False
@@ -318,7 +337,7 @@ class Registrations(WhollySheet[Registrant]):
                 registered = True
         return registered
 
-    def register(self, registrant: Registrant):
+    def register(self, registrant: Registration):
         """Register user by inserting registrant details into registrations sheet"""
         registrant.date_registered = datetime.datetime.now(tz=datetime.timezone.utc)
         super().create(registrant)

@@ -9,7 +9,7 @@ from googleapiclient import discovery  # type: ignore
 from sheets import (
     Hackathon,
     Hackathons,
-    Registrant,
+    Registration,
     Registrations,
     Sheets,
     User,
@@ -136,7 +136,7 @@ def get_test_registrants(test_data):
     """Returns a list of dicts representing the registrations sheet"""
     registrations_sheet = test_data["sheets"][2]
     assert registrations_sheet["properties"]["title"] == "registrations"
-    return create_sheet_repr(registrations_sheet, Registrant)
+    return create_sheet_repr(registrations_sheet, Registration)
 
 
 def create_sheet_repr(sheet, model):

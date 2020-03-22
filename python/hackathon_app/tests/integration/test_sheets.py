@@ -1,7 +1,7 @@
 import datetime
 from typing import Sequence
 
-from sheets import User, Users, RegisterUser, Registrant, Registrations, Sheets
+from sheets import User, Users, RegisterUser, Registration, Registrations, Sheets
 
 
 def test_gets_all_hackathons(sheets: Sheets, test_data):
@@ -22,7 +22,7 @@ def test_register_user_registers(
             hackathon_id="sanfrancisco_2019",
             user_id="1",
             first_name="New",
-            last_name="Registrant",
+            last_name="Registration",
             email="newregistrant@newompany.com",
             organization="New Company",
             role="Data person",
@@ -91,7 +91,7 @@ def test_register_user_registers_when_user_exists(
 def test_register_updates_user_if_user_is_registered(
     users: Users,
     test_users: Sequence[User],
-    test_registrants: Sequence[Registrant],
+    test_registrants: Sequence[Registration],
     sheets: Sheets,
     registrations: Registrations,
 ):

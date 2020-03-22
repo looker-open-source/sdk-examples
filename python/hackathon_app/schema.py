@@ -1,3 +1,4 @@
+from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar
 import os.path
 
 class SchemaError(Exception):
@@ -5,7 +6,7 @@ class SchemaError(Exception):
 
 class SchemaColumn:
     name: str
-    old_name: str = None
+    old_name: str = ""
 
     def __init__(
             self,
@@ -20,7 +21,7 @@ class SchemaColumn:
     def debug(
             self
     ):
-        if self.old_name is not None:
+        if self.old_name:
             return f"{self.old_name} -> {self.name}"
         else:
             return self.name
@@ -28,7 +29,7 @@ class SchemaColumn:
 
 class SchemaTab:
     name: str
-    columns: [SchemaColumn]
+    columns: List[SchemaColumn]
 
     def __init__(
             self,
@@ -68,23 +69,23 @@ class SchemaTab:
 
 # @attr.s(auto_attribs=True, kw_only=True)
 class SchemaSheet:
-    tabs: [SchemaTab]
+    tabs: List[SchemaTab]
 
     def __init__(
             self,
             *,
             filename: str = "",
-            contents: str = "",
+            lines: str = "",
     ):
         # Read contents from the file if the schema filename is passed and exists
         if filename:
             if os.path.isfile(filename):
                 with open(filename, "r") as f:
-                    contents = f.read()
+                    lines = f.read()
             else:
                 raise SchemaError(f"{filename} was not found or could not be opened for reading")
 
-        lines = contents.split("\n")
+        lines = lines.split("\n")
         self.tabs = []
         for line in lines:
             if not line:
