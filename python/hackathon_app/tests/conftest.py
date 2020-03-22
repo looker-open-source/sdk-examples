@@ -183,6 +183,14 @@ def get_test_data():
     return data
 
 
+@pytest.fixture(name="test_schema", scope="session")
+def get_test_data():
+    """Load the hackathon schema"""
+    with open("hackathon.schema", "r") as f:
+        data = f.read()
+    return data
+
+
 @pytest.fixture(scope="session")
 def spreadsheet_client(credentials):
     """Create a resource object to use the sheets API"""

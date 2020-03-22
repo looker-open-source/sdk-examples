@@ -79,8 +79,8 @@ class Sheets:
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Model:
-    row_id: Optional[int] = None
     id: str = ""
+    row_id: Optional[int] = None
 
 
 TModel = TypeVar("TModel", bound=Model)
