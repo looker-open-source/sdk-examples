@@ -17,6 +17,7 @@ DATE_FORMAT = "%m/%d/%Y"
 @attr.s(auto_attribs=True, kw_only=True)
 class RegisterUser:
     hackathon: str
+    user_id: str
     first_name: str
     last_name: str
     email: str
@@ -44,9 +45,13 @@ class Sheets:
         )
         client = service.spreadsheets().values()
         self.id = spreadsheet_id
+
+        # TODO make this a bit less verbose, and more abstract, like pass in `self` to the constructor rather than
+        #  client and id
         self.hackathons = Hackathons(client=client, spreadsheet_id=spreadsheet_id)
         self.registrations = Registrations(client=client, spreadsheet_id=spreadsheet_id)
         self.users = Users(client=client, spreadsheet_id=spreadsheet_id)
+        self.projects = Projects(client=client, spreadsheet_id=spreadsheet_id)
 
     def get_hackathons(self) -> Sequence["Hackathon"]:
         """Get names of active hackathons."""
@@ -54,7 +59,8 @@ class Sheets:
 
     def register_user(self, register_user: RegisterUser):
         """Register user to a hackathon"""
-        user = self.users.find(register_user.email) or User()
+        user = self.users.find(register_user.user_id) or User()
+        user.id = register_user.user_id
         user.first_name = register_user.first_name
         user.last_name = register_user.last_name
         user.email = register_user.email
@@ -63,7 +69,7 @@ class Sheets:
         user.tshirt_size = register_user.tshirt_size
         self.users.save(user)
         registrant = Registrant(
-            user_email=user.email, hackathon_name=register_user.hackathon
+            user_id=user.id, hackathon_id=register_user.hackathon_id
         )
         if not self.registrations.is_registered(registrant):
             self.registrations.register(registrant)
@@ -73,7 +79,8 @@ class Sheets:
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Model:
-    id: Optional[int] = None
+    row_id: Optional[int] = None
+    id: str = ""
 
 
 TModel = TypeVar("TModel", bound=Model)
@@ -127,7 +134,7 @@ class WhollySheet(Generic[TModel]):
         match = re.match(fr"{self.sheet_name}!A(?P<row_id>\d+)", updated_range)
         if not match:
             raise SheetError("Could not determine row_id")
-        model.id = int(match.group("row_id"))
+        model.row_id = int(match.group("row_id"))
 
     def rows(self) -> Sequence[TModel]:
         """Retrieve rows from sheet"""
@@ -156,7 +163,7 @@ class WhollySheet(Generic[TModel]):
             body = {"values": [serialized]}
             self.client.update(
                 spreadsheetId=self.spreadsheet_id,
-                range=f"{self.sheet_name}!A{model.id}:end",
+                range=f"{self.sheet_name}!A{model.row_id}:end",
                 valueInputOption="RAW",
                 body=body,
             ).execute()
@@ -182,12 +189,12 @@ class WhollySheet(Generic[TModel]):
         a list of dictionaries.
         """
         header = data[0]
-        header.insert(0, "id")
+        header.insert(0, "row_id")
         result: List[Dict[str, str]] = []
         # Google Sheets are 1 indexed, with the first row being the header.
         header_offset = 2
         for index, row in enumerate(data[1:]):
-            row.insert(0, index + header_offset)  # id value
+            row.insert(0, index + header_offset)  # row_id value
             row_tuples = itertools.zip_longest(header, row, fillvalue="")
             result.append(dict(row_tuples))
         return result
@@ -195,10 +202,10 @@ class WhollySheet(Generic[TModel]):
     def _convert_to_list(
         self, data: Dict[str, Union[str, int]]
     ) -> Sequence[Union[str, int]]:
-        """Given a dictionary, return a list containing its values. The 'id' key is dropped
+        """Given a dictionary, return a list containing its values. The 'row_id' key is dropped
         since it's not part of the schema
         """
-        data.pop("id")
+        data.pop("row_id")
         return list(data.values())
 
 
@@ -225,14 +232,14 @@ class Users(WhollySheet[User]):
             spreadsheet_id=spreadsheet_id,
             sheet_name="users",
             structure=User,
-            key="email",
+            key="id",  # Looker User ID
         )
 
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Hackathon(Model):
-    name: str
-    label: str
+    label: str  ## TODO change to "name"
+    description: str
     location: str
     date: datetime.datetime
     duration_in_days: int
@@ -245,7 +252,7 @@ class Hackathons(WhollySheet[Hackathon]):
             spreadsheet_id=spreadsheet_id,
             sheet_name="hackathons",
             structure=Hackathon,
-            key="name",
+            key="id", # Hackathon short name/id
         )
 
     def get_upcoming(
@@ -266,8 +273,8 @@ class Hackathons(WhollySheet[Hackathon]):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Registrant(Model):
-    user_email: str
-    hackathon_name: str
+    user_id: str
+    hackathon_id: str
     date_registered: Optional[datetime.datetime] = None
     attended: Optional[bool] = None
 
@@ -279,17 +286,17 @@ class Registrations(WhollySheet[Registrant]):
             spreadsheet_id=spreadsheet_id,
             sheet_name="registrations",
             structure=Registrant,
-            key="hackathon_name",
+            key="hackathon_id",
         )
 
     def is_registered(self, registrant: Registrant) -> bool:
-        """Check if registrant is already registerd"""
+        """Check if registrant is already registered"""
         registrants = super().rows()
         registered = False
         for r in registrants:
             if (
-                r.user_email == registrant.user_email
-                and r.hackathon_name == registrant.hackathon_name
+                r.user_id == registrant.user_id
+                and r.hackathon_id == registrant.hackathon_id
             ):
                 registered = True
         return registered
@@ -298,6 +305,33 @@ class Registrations(WhollySheet[Registrant]):
         """Register user by inserting registrant details into registrations sheet"""
         registrant.date_registered = datetime.datetime.now(tz=datetime.timezone.utc)
         super().create(registrant)
+
+
+@attr.s(auto_attribs=True, kw_only=True)
+class Project(Model):
+    # TODO: Project ID is an automatically generated GUID
+    creator_id: str = ""
+    hackathon_id: str = ""
+    title: str = ""
+    description: str = ""
+    date_created: datetime.datetime = attr.ib(
+        default=attr.Factory(lambda: datetime.datetime.now(tz=datetime.timezone.utc))
+    )
+    project_type: str = ""  # Open, Invitation Only, Closed to new team members
+    contestant: bool = True  # Is this a project to be judged?
+    locked: bool = False  # Can changes be made to this project?
+    technologies: str = ""  # Technologies used for the project. Eventually a join to the Technologies tab?
+
+
+class Projects(WhollySheet[Project]):
+    def __init__(self, *, client, spreadsheet_id: str):
+        super().__init__(
+            client=client,
+            spreadsheet_id=spreadsheet_id,
+            sheet_name="projects",
+            structure=User,
+            key="id",
+        )
 
 
 class SheetError(Exception):
