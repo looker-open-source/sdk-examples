@@ -1,8 +1,14 @@
-from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar
+from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar, Any
 import os.path
+from google.oauth2 import service_account  # type: ignore
+import googleapiclient.errors  # type: ignore
+import googleapiclient.discovery  # type: ignore
+import json
+
 
 class SchemaError(Exception):
     """Improperly formatted data to deserialize"""
+
 
 class SchemaColumn:
     name: str
@@ -85,9 +91,9 @@ class SchemaSheet:
             else:
                 raise SchemaError(f"{filename} was not found or could not be opened for reading")
 
-        lines = lines.split("\n")
+        parts = lines.split("\n")
         self.tabs = []
-        for line in lines:
+        for line in parts:
             if not line:
                 continue
             self.tabs.append(SchemaTab(line=line))
@@ -100,6 +106,36 @@ class SchemaSheet:
 
     def compare(self, schema: "SchemaSheet"):
         pass
+
+
+class SchemaReader:
+    """Reads the schema of a sheet"""
+    schema: SchemaSheet
+    spreadsheet_id: str
+    credentials: service_account.credentials
+    service: googleapiclient.discovery
+    client: Any
+
+    def __init__(self, *, spreadsheet_id: str, cred_file: str):
+        scopes = [
+            "https://www.googleapis.com/auth/drive",
+            "https://www.googleapis.com/auth/drive.file",
+            "https://www.googleapis.com/auth/spreadsheets",
+        ]
+
+        self.credentials = service_account.Credentials.from_service_account_file(
+            cred_file, scopes=scopes
+        )
+
+        self.service = googleapiclient.discovery.build(
+            "sheets", "v4", credentials=self.credentials, cache_discovery=False
+        )
+        self.spreadsheet_id = spreadsheet_id
+        self.client = self.service.spreadsheets().values()
+
+    def debug(self):
+        return json.dump(self.client, indent=2)
+
 
 if __name__ == "__main__":
     schema = SchemaSheet(filename="hackathon.schema")

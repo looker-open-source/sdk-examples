@@ -43,6 +43,7 @@ def get_sheet_schema() -> schema.SchemaSheet:
     """Return the schema structure for the declared Sheets structure"""
     return schema.SchemaSheet(get_sheet_schema_lines())
 
+
 class Sheets:
     """An API for manipulating the Google Sheet containing hackathon data."""
 

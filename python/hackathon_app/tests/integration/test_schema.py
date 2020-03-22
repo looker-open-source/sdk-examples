@@ -1,23 +1,29 @@
-import datetime
-from typing import Sequence
 
-from schema import SchemaSheet, SchemaTab, SchemaColumn
-from sheets import Sheets
+import schema
+import sheets
 
 
 # def test_read_schema(sheets: Sheets, test_schema):
 def test_read_schema(test_schema):
     """SchemaSheet should read parse all schema."""
-    schema = SchemaSheet(lines=test_schema)
-    assert isinstance(schema, SchemaSheet)
-    assert len(schema.tabs) > 0
+    actual = schema.SchemaSheet(lines=test_schema)
+    assert isinstance(actual, schema.SchemaSheet)
+    assert len(actual.tabs) > 0
 
 
-def test_schema_compare(sheets: Sheets, test_schema):
+def test_schema_compare(test_schema):
     """SchemaSheet should read parse all schema."""
-    code = sheets.get_schema()
-    schema = SchemaSheet(lines=test_schema)
-    assert isinstance(code, SchemaSheet)
-    assert isinstance(schema, SchemaSheet)
-    assert len(schema.tabs) > 0
+    code = sheets.get_sheet_schema()
+    actual = schema.SchemaSheet(lines=test_schema)
+    assert isinstance(code, schema.SchemaSheet)
+    assert isinstance(actual, schema.SchemaSheet)
+    assert len(actual.tabs) > 0
+
+def test_schema_reader(spreadsheet_id, credentials):
+    """SchemaSheet should read parse all schema."""
+    code = sheets.get_sheet_schema()
+    actual = schema.SchemaSheet(lines=test_schema)
+    assert isinstance(code, schema.SchemaSheet)
+    assert isinstance(actual, schema.SchemaSheet)
+    assert len(actual.tabs) > 0
 
