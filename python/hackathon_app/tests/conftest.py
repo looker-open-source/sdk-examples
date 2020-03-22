@@ -175,16 +175,16 @@ def get_data(sheet):
     return data
 
 
-@pytest.fixture(name="test_data", scope="session")
-def get_test_data():
+@pytest.fixture(scope="session")
+def test_data():
     """Load the test data"""
     with open("tests/data/data.json", "r") as f:
         data = json.load(f)
     return data
 
 
-@pytest.fixture(name="test_schema", scope="session")
-def get_test_data():
+@pytest.fixture(scope="session")
+def test_schema():
     """Load the hackathon schema"""
     with open("hackathon.schema", "r") as f:
         data = f.read()

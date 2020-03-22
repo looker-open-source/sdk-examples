@@ -2,9 +2,11 @@ from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar
 import datetime
 import itertools
 import re
+import uuid
 
 import attr
 import cattr
+import schema
 from google.oauth2 import service_account  # type: ignore
 import googleapiclient.errors  # type: ignore
 import googleapiclient.discovery  # type: ignore
@@ -16,7 +18,7 @@ DATE_FORMAT = "%m/%d/%Y"
 
 @attr.s(auto_attribs=True, kw_only=True)
 class RegisterUser:
-    hackathon: str
+    hackathon_id: str
     user_id: str
     first_name: str
     last_name: str
@@ -76,11 +78,26 @@ class Sheets:
 
         return user
 
+    def get_schema(self) -> schema.SchemaSheet:
+
+        tabs/columns
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Model:
-    id: str = ""
     row_id: Optional[int] = None
+    id: str = attr.ib(
+        default=attr.Factory(lambda: str(uuid.uuid4()))
+    )
+
+    def property_names(self) -> List[str]:
+        fields = [f.name for f in attr.fields(self.__class__)]
+        fields.pop(0)
+        return fields
+
+    def schema(self) -> schema.SchemaTab:
+        fields = ",".join(self.property_names())
+        line = f"{type(self).__name__.lower()}:{fields}"
+        return schema.SchemaTab(line=line)
 
 
 TModel = TypeVar("TModel", bound=Model)
@@ -329,7 +346,7 @@ class Projects(WhollySheet[Project]):
             client=client,
             spreadsheet_id=spreadsheet_id,
             sheet_name="projects",
-            structure=User,
+            structure=Project,
             key="id",
         )
 

@@ -1,21 +1,8 @@
-from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar
 import os.path
-import datetime
-import itertools
-import re
 
-import attr
-import cattr
-from google.oauth2 import service_account  # type: ignore
-import googleapiclient.errors  # type: ignore
-import googleapiclient.discovery  # type: ignore
+class SchemaError(Exception):
+    """Improperly formatted data to deserialize"""
 
-from sheets import SheetError, Sheets
-
-# TODO get lots of syntax help in this file!!!
-
-
-@attr.s(auto_attribs=True, kw_only=True)
 class SchemaColumn:
     name: str
     old_name: str = None
@@ -27,46 +14,18 @@ class SchemaColumn:
     ):
         parts = line.split("~", maxsplit=2)
         self.name = parts[0]
-        if parts.count() > 1:
+        if len(parts) > 1:
             self.old_name = parts[1]
 
     def debug(
             self
     ):
         if self.old_name is not None:
-            return f"{self.old_name } -> {self.name}"
+            return f"{self.old_name} -> {self.name}"
         else:
             return self.name
 
 
-# TSchemaColumn = TypeVar("TSchemaColumn", bound=SchemaColumn)
-
-
-# TODO should this be a List, Array, or what? I'd like to use it instead of [SchemaColumn] in SchemaTab.
-#  but maybe it's not worth the bother?
-# @attr.s(auto_attribs=True, kw_only=True)
-# class SchemaColumns(Generic[TSchemaColumn]):
-#     def __init__(
-#             self,
-#             *,
-#             line: str
-#     ):
-#         parts = line.split(',')
-#         for part in parts:
-#             # TODO how do I add a column to SchemaColumns self?
-#             self.append(SchemaColumn(line=part))
-#
-#     def debug(
-#             self
-#     ):
-#         # TODO want to dump all columns on a new line
-#         result = f"{self.count()} columns:"
-#         for item in self:
-#             result += f"\n\t{item.debug()}"
-#         return result
-
-
-@attr.s(auto_attribs=True, kw_only=True)
 class SchemaTab:
     name: str
     columns: [SchemaColumn]
@@ -77,20 +36,23 @@ class SchemaTab:
             line: str,
     ):
         parts = line.split(":", maxsplit=2)
-        if parts.count() < 2:
-            raise SheetError("Invalid schema definition. Should be in the format: 'tabname:col1,col2,col3~oldcol3'")
+        if len(parts) < 2:
+            raise SchemaError(
+                f"Invalid schema definition. '{line}' should be in the format: 'tabname:col1,col2,col3~oldcol3'")
         self.name = parts[0]
         self.columns = []
         columns = parts[1].split(",")
-        if columns.count() < 1:
-            raise SheetError(f"{self.name} has no valid columns defined in '{parts[1]}'")
+        if len(columns) < 1:
+            raise SchemaError(f"{self.name} has no valid columns defined in '{parts[1]}'")
         for col in columns:
+            if not col:
+                continue
             self.columns.append(SchemaColumn(line=col))
 
     def debug(
             self
     ):
-        result = f"{self.name} has {self.columns.count()} columns:"
+        result = f"{self.name} has {len(self.columns)} columns:"
         for col in self.columns:
             result += f"\n\t{col.debug()}"
         return result
@@ -104,40 +66,39 @@ class SchemaTab:
         pass
 
 
-@attr.s(auto_attribs=True, kw_only=True)
+# @attr.s(auto_attribs=True, kw_only=True)
 class SchemaSheet:
-    sheet: Sheets
     tabs: [SchemaTab]
 
     def __init__(
             self,
             *,
-            gsheet: Sheets = None,
             filename: str = "",
             contents: str = "",
     ):
-        self.sheet = gsheet
         # Read contents from the file if the schema filename is passed and exists
         if filename:
             if os.path.isfile(filename):
                 with open(filename, "r") as f:
                     contents = f.read()
             else:
-                raise SheetError(f"{filename} was not found or could not be opened for reading")
-
-        if not contents:
-            raise SheetError(f"No contents to process in {filename}")
+                raise SchemaError(f"{filename} was not found or could not be opened for reading")
 
         lines = contents.split("\n")
         self.tabs = []
         for line in lines:
+            if not line:
+                continue
             self.tabs.append(SchemaTab(line=line))
 
     def debug(self):
-        result = f"{self.tabs.count()} tabs:\n"
+        result = f"{len(self.tabs)} tabs:"
         for tab in self.tabs:
-            result += tab.debug()
+            result += f"\n{tab.debug()}"
+        return result
 
+    def compare(self, schema: "SchemaSheet"):
+        pass
 
 if __name__ == "__main__":
     schema = SchemaSheet(filename="hackathon.schema")

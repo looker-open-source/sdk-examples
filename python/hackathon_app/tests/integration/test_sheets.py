@@ -36,7 +36,7 @@ def test_register_user_registers(
 
     all_registrants = registrations.rows()
     last_registrant = all_registrants[-1]
-    assert last_registrant.user_id = new_user.id
+    assert last_registrant.user_id == new_user.id
     assert last_registrant.user_email == new_user.email
     assert last_registrant.hackathon_name == "sanfrancisco_2019"
     assert last_registrant.date_registered
