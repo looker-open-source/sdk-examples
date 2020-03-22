@@ -19,7 +19,8 @@ def test_register_user_registers(
     """
     new_user = sheets.register_user(
         RegisterUser(
-            hackathon="sanfrancisco_2019",
+            hackathon_id="sanfrancisco_2019",
+            user_id="1",
             first_name="New",
             last_name="Registrant",
             email="newregistrant@newompany.com",
@@ -35,6 +36,7 @@ def test_register_user_registers(
 
     all_registrants = registrations.rows()
     last_registrant = all_registrants[-1]
+    assert last_registrant.user_id = new_user.id
     assert last_registrant.user_email == new_user.email
     assert last_registrant.hackathon_name == "sanfrancisco_2019"
     assert last_registrant.date_registered
@@ -58,6 +60,7 @@ def test_register_user_registers_when_user_exists(
     registered_user = sheets.register_user(
         RegisterUser(
             hackathon="newhackathon_2019",
+            user_id=existing_user.id,
             first_name=existing_user.first_name,
             last_name=existing_user.last_name,
             email=existing_user.email,
@@ -74,6 +77,7 @@ def test_register_user_registers_when_user_exists(
 
     all_registrants = registrations.rows()
     last_registrant = all_registrants[-1]
+    assert last_registrant.user_id == existing_user.id
     assert last_registrant.user_email == existing_user.email
     assert last_registrant.hackathon_name == "newhackathon_2019"
     assert last_registrant.date_registered
@@ -94,6 +98,7 @@ def test_register_updates_user_if_user_is_registered(
     """register_user() should update the user but not re-register if user is already registered"""
     existing_registrant = test_registrants[0]
     for user in test_users:
+        # TODO use user id instead?
         if user.email == existing_registrant.user_email:
             updated_user = user
             break
@@ -106,6 +111,7 @@ def test_register_updates_user_if_user_is_registered(
     sheets.register_user(
         RegisterUser(
             hackathon="newhackathon_2019",
+            user_id=updated_user.id,
             first_name=updated_user.first_name,
             last_name=updated_user.last_name,
             email=updated_user.email,
@@ -115,5 +121,5 @@ def test_register_updates_user_if_user_is_registered(
         )
     )
 
-    retrieved_user = users.find(existing_registrant.user_email)
+    retrieved_user = users.find(existing_registrant.user_id)
     assert retrieved_user == updated_user
