@@ -93,3 +93,13 @@ class Project(flask_restful.Resource, ProjectBuilder):
     @flask_restful.marshal_with(project)
     def get(self, id):
         return self.build_project(id)
+
+    @flask_restful.marshal_with(project)
+    def patch(self, id):
+        # TODO use flask_restful.reqparse.RequestParser() to parse json
+        # and restrict input
+        project = self.sheets.projects.find(id)
+        for prop, val in flask.request.json.items():
+            setattr(project, prop, val)
+        self.sheets.projects.update(project)
+        return self.build_project(project.id)
