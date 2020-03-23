@@ -44,5 +44,5 @@
     ]
   },
   "proxy": "http://localhost:5000",
-  "homepage": "http://mywebsite.com/static"
+  "homepage": "http://mywebsite.com/"
 }

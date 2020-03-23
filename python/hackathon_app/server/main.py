@@ -3,6 +3,7 @@ import os
 from typing import Any
 
 import flask
+import flask_restful  # type: ignore
 import flask_wtf  # type: ignore
 from google.oauth2 import id_token  # type: ignore
 from google.auth.transport import requests  # type: ignore
@@ -11,6 +12,7 @@ from wtforms import validators
 
 import authentication
 import looker
+from .resources import projects
 import sheets
 
 logging.config.fileConfig("logging.conf")
@@ -19,6 +21,21 @@ logging.config.fileConfig("logging.conf")
 app = flask.Flask(__name__)
 app.config.from_object("config")
 app.logger.removeHandler(flask.logging.default_handler)
+
+api_bp = flask.Blueprint("api", __name__)
+api = flask_restful.Api(app)
+sheets_client = sheets.Sheets(
+    spreadsheet_id=app.config["GOOGLE_SHEET_ID"],
+    cred_file=app.config["GOOGLE_APPLICATION_CREDENTIALS"],
+)
+api.add_resource(
+    projects.Projects, "/projects", resource_class_kwargs={"sheets": sheets_client}
+)
+api.add_resource(
+    projects.Project,
+    "/projects/<string:id>",
+    resource_class_kwargs={"sheets": sheets_client},
+)
 
 
 class RegistrationForm(flask_wtf.FlaskForm):
@@ -134,7 +151,7 @@ def get_hackathons():
         cred_file=app.config["GOOGLE_APPLICATION_CREDENTIALS"],
     )
     try:
-        hackathons = {h.name: h.label for h in sheets_client.get_hackathons()}
+        hackathons = {h.id: h.name for h in sheets_client.get_hackathons()}
     except sheets.SheetError as ex:
         app.logger.error(ex, exc_info=True)
         hackathons = [""]
@@ -173,7 +190,7 @@ def register() -> Any:
     email = form.data["email"]
     email_verified = form.data["email_verified"]
     register_user = sheets.RegisterUser(
-        hackathon=hackathon,
+        hackathon_id=hackathon,
         first_name=first_name,
         last_name=last_name,
         email=email,
