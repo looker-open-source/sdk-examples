@@ -1,4 +1,5 @@
 import enum
+import difflib
 from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar, Any
 import os.path
 from google.oauth2 import service_account  # type: ignore
@@ -21,8 +22,8 @@ class Difference(enum.Enum):
 
 
 class Delta:
-    name : str = ""
-    old_name : str = ""
+    name: str = ""
+    old_name: str = ""
     position: int = 0
     old_position: int = 0
     diff: Difference
@@ -53,6 +54,8 @@ class Delta:
             result += f"Old Name '{self.old_name}' has been changed to '{self.name}'. "
         if Difference.Columns in self.diff:
             result += f"Columns for tab '{self.name}' do not match'. "
+        if Difference.Missing in self.diff:
+            result += f"'{self.name}' was not found in other. "
         return result
 
 
@@ -63,7 +66,7 @@ class SchemaError(Exception):
 class SchemaName:
     """Base class for sheet schema"""
     name: str = ""
-    old_name : str = ""
+    old_name: str = ""
 
     def __init__(self, *, name: str):
         parts = name.split("~", maxsplit=2)
@@ -80,17 +83,18 @@ class SchemaName:
             return self.name
 
     def compare(self, other: "SchemaName"):
-        delta : List[Delta] = []
+        delta: List[Delta] = []
         if other.name != self.name:
-            delta.append(Delta(name=self.name, old_name=other.name, diff = Difference.Name))
+            delta.append(Delta(name=self.name, old_name=other.name, diff=Difference.Name))
         if other.old_name != self.old_name:
-            delta.append(Delta(name=self.old_name, old_name=other.old_name, diff = Difference.OldName))
+            delta.append(Delta(name=self.old_name, old_name=other.old_name, diff=Difference.OldName))
         return delta
 
     def to_lines(self):
         if self.old_name:
             return f"{self.name}~{self.old_name}"
         return self.name
+
 
 class SchemaColumn(SchemaName):
     """Sheet column schema object"""
@@ -103,14 +107,17 @@ class SchemaColumn(SchemaName):
     def compare(self, other: "SchemaColumn"):
         delta = super().compare(other)
         if other.position != self.position:
-            delta.append(Delta(name=self.name, old_name=other.old_name, position=self.position, old_position=other.position, diff=Difference.Position))
+            delta.append(
+                Delta(name=self.name, old_name=other.old_name, position=self.position, old_position=other.position,
+                      diff=Difference.Position))
         return delta
 
-def find_column(name: str, cols: List[SchemaColumn]) -> SchemaColumn:
-    return next(x for x in cols if x.name == name)
-    # found = [x for x in cols if x.name == name]
-    # found = found[0] if found else None
-    # return found
+
+def find_column(name: str, cols: List[SchemaColumn]) -> Union[SchemaColumn, None]:
+    try:
+        return next(x for x in cols if x.name == name)
+    except StopIteration:
+        return None
 
 
 class SchemaTab(SchemaName):
@@ -164,7 +171,7 @@ class SchemaTab(SchemaName):
         return delta
 
     def to_lines(self):
-        names = {c.to_lines() for c in self.columns}
+        names = [c.to_lines() for c in self.columns]
         fields = ",".join(names)
         lines = f"{super().to_lines()}:{fields}"
         return lines
@@ -172,6 +179,13 @@ class SchemaTab(SchemaName):
     def update(self):
         """Update the tab to match the schema"""
         pass
+
+
+def find_tab(name: str, tabs: List[SchemaTab]) -> Union[SchemaTab, None]:
+    try:
+        return next(x for x in tabs if x.name == name)
+    except StopIteration:
+        return None
 
 
 class SchemaSheet:
@@ -205,14 +219,32 @@ class SchemaSheet:
         return result
 
     def compare(self, other: "SchemaSheet"):
-        delta : List[Delta] = []
+        delta: List[Delta] = []
+        for index, t in enumerate(self.tabs):
+            t2 = find_tab(t.name, other.tabs)
+            if t2:
+                diff = t.compare(t2)
+                if len(diff) > 0:
+                    for d in diff:
+                        delta.append(d)
+            else:
+                delta.append(Delta(name=t.name, diff=Difference.Missing))
         return delta
-        # for tab in self.tabs:
-        #     delta.append(tab.compare())
 
     def to_lines(self):
-        lines = {t.to_lines() for t in self.tabs}
-        return "\n".join(lines)
+        lines = [t.to_lines() for t in self.tabs]
+        return "\n".join(lines).strip()
+
+    def whats_the_diff(self, other: "SchemaSheet", html: bool = False):
+        lines = self.to_lines()
+        other_lines = other.to_lines()
+        if html:
+            differ = difflib.HtmlDiff()
+            result = differ.make_table(fromlines=lines, tolines=other_lines)
+        else:
+            differ = difflib.Differ()
+            result = differ.compare(lines, other_lines)
+        return result
 
 
 class DiffColumn:
@@ -252,7 +284,6 @@ class DiffSchema:
             actual: SchemaSheet,
     ):
         self.delta = expected.compare(actual)
-
 
 
 class SchemaReader:
@@ -306,7 +337,6 @@ class SchemaReader:
 
     def debug(self):
         return self.schema.debug()
-
 
 
 if __name__ == "__main__":
