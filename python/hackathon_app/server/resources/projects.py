@@ -2,7 +2,7 @@ import flask
 import flask_restful  # type: ignore
 import flask_restful.fields  # type: ignore
 
-import models
+from . import models
 import sheets
 
 
