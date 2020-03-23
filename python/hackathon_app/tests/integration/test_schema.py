@@ -5,10 +5,17 @@ import sheets
 def test_parse_schema(test_schema):
     """SchemaSheet should parse all schema."""
     actual = schema.SchemaSheet(lines=test_schema)
-    lines = actual.to_lines()
     assert isinstance(actual, schema.SchemaSheet)
     assert len(actual.tabs) > 0
+    lines = actual.to_lines()
     assert test_schema == lines
+
+
+def test_to_lines():
+    line = "tab:col1,col2~old2"
+    tab = schema.SchemaTab(line=line)
+    lines = tab.to_lines()
+    assert line == lines
 
 
 def test_schema_compare(test_schema):

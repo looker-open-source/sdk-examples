@@ -164,7 +164,7 @@ class SchemaTab(SchemaName):
         return delta
 
     def to_lines(self):
-        names = {c.name for c in self.columns}
+        names = {c.to_lines() for c in self.columns}
         fields = ",".join(names)
         lines = f"{super().to_lines()}:{fields}"
         return lines
