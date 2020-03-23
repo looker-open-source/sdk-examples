@@ -31,31 +31,46 @@ class Delta:
     def __init__(
             self,
             *,
+            item: "SchemaName",
+            parent: Optional["SchemaName"] = None,
             name: str = "",
             old_name: str = "",
             position: int = 0,
             old_position: int = 0,
             diff,
     ):
+        self.item = item
+        self.parent = parent
         self.name = name
         self.old_name = old_name
         self.position = position
         self.old_position = old_position
         self.diff = diff
 
+    def desc(self):
+        result = f"{type(self.item).__name__} "
+        if self.parent:
+            result += f"{self.parent.name}."
+        result += self.item.name
+        return result
+
     def debug(self):
-        result = ""
-        if Difference.Position in self.diff:
+        result = f"{self.desc()}: "
+        if Difference.Position == self.diff:
             # This can only be set for columns
-            result += f"{self.column_name} position is {self.old_position}, not {self.position}. "
-        if Difference.Name in self.diff:
-            result += f"'Name {self.old_name}' has been changed to '{self.name}'. "
-        if Difference.OldName in self.diff:
-            result += f"Old Name '{self.old_name}' has been changed to '{self.name}'. "
-        if Difference.Columns in self.diff:
-            result += f"Columns for tab '{self.name}' do not match'. "
-        if Difference.Missing in self.diff:
-            result += f"'{self.name}' was not found in other. "
+            result += f"Move {self.name} from position {self.old_position+1} to {self.position+1}. "
+        if Difference.Name == self.diff:
+            result += f"Rename '{self.old_name}' to '{self.name}'. "
+        if Difference.OldName == self.diff:
+            result += f"Old Name '{self.old_name}' does not match '{self.name}'. "
+        if Difference.Columns == self.diff:
+            result += f"{self.name} Columns do not match'. "
+        if Difference.Missing == self.diff:
+            if type(self.item).__name__ == "SchemaColumn":
+                result += f"Insert '{self.name}' at column {self.position+1}. "
+            else:
+                result += f"Create tab '{self.name}'. "
+
         return result
 
 
@@ -82,12 +97,12 @@ class SchemaName:
         else:
             return self.name
 
-    def compare(self, other: "SchemaName"):
+    def compare(self, other: "SchemaName", parent: "SchemaName" = None):
         delta: List[Delta] = []
         if other.name != self.name:
-            delta.append(Delta(name=self.name, old_name=other.name, diff=Difference.Name))
+            delta.append(Delta(item=self, parent=parent, name=self.name, old_name=other.name, diff=Difference.Name))
         if other.old_name != self.old_name:
-            delta.append(Delta(name=self.old_name, old_name=other.old_name, diff=Difference.OldName))
+            delta.append(Delta(item=self, parent=parent, name=self.old_name, old_name=other.old_name, diff=Difference.OldName))
         return delta
 
     def to_lines(self):
@@ -104,12 +119,12 @@ class SchemaColumn(SchemaName):
         super().__init__(name=line)
         self.position = position
 
-    def compare(self, other: "SchemaColumn"):
-        delta = super().compare(other)
+    def compare(self, other: "SchemaColumn", parent: "SchemaTab"):
+        delta = super().compare(other, parent)
         if other.position != self.position:
             delta.append(
-                Delta(name=self.name, old_name=other.old_name, position=self.position, old_position=other.position,
-                      diff=Difference.Position))
+                Delta(item=self, parent=parent, name=self.name, old_name=other.old_name, position=self.position,
+                      old_position=other.position, diff=Difference.Position))
         return delta
 
 
@@ -152,22 +167,22 @@ class SchemaTab(SchemaName):
 
     def compare(self, other: "SchemaTab"):
         """Compare the schema and the tab, returning delta"""
-        delta = super().compare(other)
+        delta = super().compare(other, self)
         colDiff = False
         for col in self.columns:
             col2 = find_column(col.name, other.columns)
             if col2:
-                diffs = col.compare(col2)
+                diffs = col.compare(col2, self)
                 if len(diffs) > 0:
                     colDiff = True
                     for d in diffs:
                         delta.append(d)
             else:
                 colDiff = True
-                delta.append(Delta(name=col.name, diff=Difference.Missing))
+                delta.append(Delta(item=col, parent=self, name=col.name, position=col.position, diff=Difference.Missing))
 
         if colDiff:
-            delta.append(Delta(name=self.name, diff=Difference.Columns))
+            delta.append(Delta(item=self, parent=self, name=self.name, diff=Difference.Columns))
         return delta
 
     def to_lines(self):
@@ -228,7 +243,7 @@ class SchemaSheet:
                     for d in diff:
                         delta.append(d)
             else:
-                delta.append(Delta(name=t.name, diff=Difference.Missing))
+                delta.append(Delta(item=t, name=t.name, diff=Difference.Missing))
         return delta
 
     def to_lines(self):
@@ -239,8 +254,8 @@ class SchemaSheet:
         lines = self.to_lines()
         other_lines = other.to_lines()
         if html:
-            differ = difflib.HtmlDiff()
-            result = differ.make_table(fromlines=lines, tolines=other_lines)
+            htmlify = difflib.HtmlDiff()
+            result = htmlify.make_table(fromlines=lines, tolines=other_lines)
         else:
             differ = difflib.Differ()
             result = differ.compare(lines, other_lines)

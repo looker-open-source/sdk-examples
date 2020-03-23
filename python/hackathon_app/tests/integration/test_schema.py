@@ -1,7 +1,16 @@
-from pprint import pprint
+from typing import List
 
 import schema
 import sheets
+
+
+def check_delta(test: str, delta: List[schema.Delta]):
+    diff = "\n".join(
+        [d.debug() for d in delta if d.diff != schema.Difference.OldName and d.diff != schema.Difference.Columns]
+    )
+    if len(diff) > 0:
+        print(f"\n{test}")
+        print(diff)
 
 
 def test_parse_schema(test_schema):
@@ -25,7 +34,9 @@ def test_model_compare(test_schema):
     """SchemaSheet should compare all schema."""
     model = sheets.get_model_schema()
     actual = schema.SchemaSheet(lines=test_schema)
-    assert actual.to_lines() == model.to_lines()
+    delta = actual.compare(model)
+    check_delta("Schema vs. Model", delta)
+    assert len(delta) == 0
 
 
 def test_sheet_compare(create_test_sheet, cred_file, test_schema):
@@ -33,13 +44,11 @@ def test_sheet_compare(create_test_sheet, cred_file, test_schema):
     spreadsheet_id = create_test_sheet["spreadsheetId"]
     reader = schema.SchemaReader(spreadsheet_id=spreadsheet_id, cred_file=cred_file)
     actual = schema.SchemaSheet(lines=test_schema)
-    assert actual.to_lines() == reader.schema.to_lines()
-
-
-def test_schema_reader(create_test_sheet, cred_file):
-    """SchemaSheet should read parse all schema."""
-    spreadsheet_id = create_test_sheet["spreadsheetId"]
-    reader = schema.SchemaReader(spreadsheet_id=spreadsheet_id, cred_file=cred_file)
     model = sheets.get_model_schema()
-    delta = model.compare(reader.schema)
+    delta = actual.compare(reader.schema)
+    url = create_test_sheet["spreadsheetUrl"]
+    check_delta(f"Schema vs. Sheet {url}", delta)
+    delta2 = model.compare(reader.schema)
+    check_delta(f"Model vs. Sheet {url}", delta2)
     assert len(delta) == 0
+    assert len(delta2) == 0

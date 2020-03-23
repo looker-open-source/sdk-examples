@@ -2,58 +2,12 @@ import flask
 import flask_restful  # type: ignore
 import flask_restful.fields  # type: ignore
 
+import models
 import sheets
 
 
 # TODO: upgrade to python 3.8 to get typeddict and use for resource method
 # return typing below
-# TODO: probably should have separate resource files where user, registration,
-# hackathon etc are defined?
-user = {
-    "id": flask_restful.fields.String,
-    "date_created": flask_restful.fields.DateTime,
-    "organization": flask_restful.fields.String,
-    "role": flask_restful.fields.String,
-    "tshirt_size": flask_restful.fields.String,
-}
-hackathon = {
-    "id": flask_restful.fields.String,
-    "name": flask_restful.fields.String,
-    "description": flask_restful.fields.String,
-    "location": flask_restful.fields.String,
-    "date": flask_restful.fields.DateTime,
-    "duration_in_days": flask_restful.fields.Integer,
-}
-registration = {
-    "id": flask_restful.fields.String,
-    "user": flask_restful.fields.Nested(user),
-    "hackathon": flask_restful.fields.Nested(hackathon),
-    "date_registered": flask_restful.fields.DateTime,
-    "attended": flask_restful.fields.Boolean,
-}
-projects = {
-    "id": flask_restful.fields.String,
-    "registration_id": flask_restful.fields.String,
-    "title": flask_restful.fields.String,
-    "description": flask_restful.fields.String,
-    "date_created": flask_restful.fields.DateTime,
-    "project_type": flask_restful.fields.String,
-    "contestant": flask_restful.fields.Boolean,
-    "locked": flask_restful.fields.Boolean,
-    "technologies": flask_restful.fields.String,
-}
-project = {
-    "id": flask_restful.fields.String,
-    "registration": flask_restful.fields.Nested(registration),
-    "title": flask_restful.fields.String,
-    "description": flask_restful.fields.String,
-    "date_created": flask_restful.fields.DateTime,
-    "project_type": flask_restful.fields.String,
-    "contestant": flask_restful.fields.Boolean,
-    "locked": flask_restful.fields.Boolean,
-    "technologies": flask_restful.fields.String,
-}
-
 
 class ProjectBuilder:
     def build_project(self, project_id):
@@ -72,11 +26,11 @@ class Projects(flask_restful.Resource, ProjectBuilder):
         self.sheets = sheets
         super()
 
-    @flask_restful.marshal_with(projects)
+    @flask_restful.marshal_with(models.projects)
     def get(self):
         return self.sheets.projects.rows()
 
-    @flask_restful.marshal_with(project)
+    @flask_restful.marshal_with(models.project)
     def post(self):
         # TODO use flask_restful.reqparse.RequestParser() to parse json
         # and restrict input
@@ -90,11 +44,11 @@ class Project(flask_restful.Resource, ProjectBuilder):
         self.sheets = sheets
         super()
 
-    @flask_restful.marshal_with(project)
+    @flask_restful.marshal_with(models.project)
     def get(self, id):
         return self.build_project(id)
 
-    @flask_restful.marshal_with(project)
+    @flask_restful.marshal_with(models.project)
     def patch(self, id):
         # TODO use flask_restful.reqparse.RequestParser() to parse json
         # and restrict input
