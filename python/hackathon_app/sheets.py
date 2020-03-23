@@ -13,8 +13,6 @@ import googleapiclient.discovery  # type: ignore
 
 NIL = "\x00"
 
-DATE_FORMAT = "%m/%d/%Y"
-
 
 def get_model_schema_lines() -> str:
     """
@@ -35,7 +33,6 @@ def get_model_schema() -> schema.SchemaSheet:
 @attr.s(auto_attribs=True, kw_only=True)
 class RegisterUser:
     hackathon_id: str
-    user_id: str
     first_name: str
     last_name: str
     email: str
@@ -77,8 +74,7 @@ class Sheets:
 
     def register_user(self, register_user: RegisterUser):
         """Register user to a hackathon"""
-        user = self.users.find(register_user.user_id) or User()
-        user.id = register_user.user_id
+        user = self.users.find(register_user.email, key="email") or User()
         user.first_name = register_user.first_name
         user.last_name = register_user.last_name
         user.email = register_user.email
@@ -86,11 +82,11 @@ class Sheets:
         user.role = register_user.role
         user.tshirt_size = register_user.tshirt_size
         self.users.save(user)
-        registrant = Registration(
+        registration = Registration(
             user_id=user.id, hackathon_id=register_user.hackathon_id
         )
-        if not self.registrations.is_registered(registrant):
-            self.registrations.register(registrant)
+        if not self.registrations.is_registered(registration):
+            self.registrations.register(registration)
 
         return user
 
@@ -98,9 +94,8 @@ class Sheets:
 @attr.s(auto_attribs=True, kw_only=True)
 class Model:
     row_id: Optional[int] = None
-    id: str = attr.ib(
-        default=attr.Factory(lambda: str(uuid.uuid4()))
-    )
+
+    id: str = attr.ib(default=attr.Factory(lambda: str(uuid.uuid4())))
 
     def get_property_names(self) -> List[str]:
         fields = [f.name for f in attr.fields(self.__class__)]
@@ -271,7 +266,7 @@ class Users(WhollySheet[User]):
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Hackathon(Model):
-    label: str = ""  # TODO change to "name"
+    name: str = ""
     description: str = ""
     location: str = ""
     date: datetime.datetime = attr.ib(
@@ -287,7 +282,7 @@ class Hackathons(WhollySheet[Hackathon]):
             spreadsheet_id=spreadsheet_id,
             sheet_name="hackathons",
             structure=Hackathon,
-            key="id", # Hackathon short name/id
+            key="id",  # Hackathon short name/id
         )
 
     def get_upcoming(
@@ -323,32 +318,30 @@ class Registrations(WhollySheet[Registration]):
             spreadsheet_id=spreadsheet_id,
             sheet_name="registrations",
             structure=Registration,
-            key="hackathon_id",
+            key="id",
         )
 
-    def is_registered(self, registrant: Registration) -> bool:
-        """Check if registrant is already registered"""
-        registrants = super().rows()
+    def is_registered(self, registration: Registration) -> bool:
+        """Check if registration is already registered"""
+        registrations = super().rows()
         registered = False
-        for r in registrants:
+        for r in registrations:
             if (
-                r.user_id == registrant.user_id
-                and r.hackathon_id == registrant.hackathon_id
+                r.user_id == registration.user_id
+                and r.hackathon_id == registration.hackathon_id
             ):
                 registered = True
         return registered
 
-    def register(self, registrant: Registration):
-        """Register user by inserting registrant details into registrations sheet"""
-        registrant.date_registered = datetime.datetime.now(tz=datetime.timezone.utc)
-        super().create(registrant)
+    def register(self, registration: Registration):
+        """Register user by inserting registration details into registrations sheet"""
+        registration.date_registered = datetime.datetime.now(tz=datetime.timezone.utc)
+        super().create(registration)
 
 
 @attr.s(auto_attribs=True, kw_only=True)
 class Project(Model):
-    # TODO: Project ID is an automatically generated GUID
-    creator_id: str = ""
-    hackathon_id: str = ""
+    registration_id: str = ""
     title: str = ""
     description: str = ""
     date_created: datetime.datetime = attr.ib(
@@ -398,6 +391,3 @@ def _convert_bool(val: str, _: bool) -> Optional[bool]:
 
 converter.register_unstructure_hook(type(None), lambda t: NIL)
 converter.register_structure_hook(bool, _convert_bool)
-
-if __name__ == "__main__":
-    sheets = Sheets(spreadsheet_id="SHEET_ID", cred_file="CREDS_FILE")
