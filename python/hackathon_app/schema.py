@@ -1,3 +1,4 @@
+from pprint import pprint
 from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar, Any
 import os.path
 from google.oauth2 import service_account  # type: ignore
@@ -108,12 +109,17 @@ class SchemaSheet:
         pass
 
 
+def sheet_range_header(tab_name: str):
+    return f"{tab_name}!1:1"
+
+
 class SchemaReader:
-    """Reads the schema of a sheet"""
+    """Reads the schema of any GSheet"""
     schema: SchemaSheet
     spreadsheet_id: str
     credentials: service_account.credentials
     service: googleapiclient.discovery
+    tab_names: List[str]
     client: Any
 
     def __init__(self, *, spreadsheet_id: str, cred_file: str):
@@ -132,9 +138,32 @@ class SchemaReader:
         )
         self.spreadsheet_id = spreadsheet_id
         self.client = self.service.spreadsheets().values()
+        lines = self.read_tabs()
+        self.schema = SchemaSheet(lines=lines)
+
+    def read_tabs(self):
+        sheet_metadata = self.service.spreadsheets().get(spreadsheetId=self.spreadsheet_id).execute()
+        properties = sheet_metadata.get('sheets')
+        self.tab_names = []
+        lines = ""
+        for item in properties:
+            title = item.get("properties").get('title')
+            self.tab_names.append(title)
+            fields = ",".join(self.header_row(title))
+            lines += f"{title}:{fields}\n"
+        return lines
+
+    def header_row(self, tab_name: str):
+        try:
+            response = self.client.get(
+                spreadsheetId=self.spreadsheet_id, range=sheet_range_header(tab_name)
+            ).execute()
+        except googleapiclient.errors.HttpError as ex:
+            raise SchemaError(str(ex))
+        return response["values"][0]
 
     def debug(self):
-        return json.dump(self.client, indent=2)
+        return self.schema.debug()
 
 
 if __name__ == "__main__":

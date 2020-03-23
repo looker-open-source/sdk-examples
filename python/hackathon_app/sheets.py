@@ -16,19 +16,7 @@ NIL = "\x00"
 DATE_FORMAT = "%m/%d/%Y"
 
 
-@attr.s(auto_attribs=True, kw_only=True)
-class RegisterUser:
-    hackathon_id: str
-    user_id: str
-    first_name: str
-    last_name: str
-    email: str
-    organization: str
-    role: str
-    tshirt_size: str = ""
-
-
-def get_sheet_schema_lines() -> str:
+def get_model_schema_lines() -> str:
     """
     Return the schema lines for the declared Sheets structure
     This output can be written directly to a file
@@ -39,9 +27,21 @@ def get_sheet_schema_lines() -> str:
     return lines
 
 
-def get_sheet_schema() -> schema.SchemaSheet:
+def get_model_schema() -> schema.SchemaSheet:
     """Return the schema structure for the declared Sheets structure"""
-    return schema.SchemaSheet(get_sheet_schema_lines())
+    return schema.SchemaSheet(lines=get_model_schema_lines())
+
+
+@attr.s(auto_attribs=True, kw_only=True)
+class RegisterUser:
+    hackathon_id: str
+    user_id: str
+    first_name: str
+    last_name: str
+    email: str
+    organization: str
+    role: str
+    tshirt_size: str = ""
 
 
 class Sheets:
