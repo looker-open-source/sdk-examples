@@ -1,0 +1,4 @@
+id	name	description	location	date	duration_in_days	max_team_size	judging_starts	judging_stops
+JOIN_2019	JOIN 2019	The first Looker Hackathon!	sfo	2019-11-05T15:00:00.000000+00:00	1	5
+NYC_2020	NYC 2020	Future JOIN-based Hackathon	nyc	2020-01-25T15:00:00.000000+00:00	1	5
+GLOBAL_2020	Global 2020	Looker's first remote Hackathon	Worldwide	2020-11-09T15:00:00.000000+00:00	1	5

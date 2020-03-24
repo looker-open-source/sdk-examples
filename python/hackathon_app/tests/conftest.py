@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import pathlib
 import pytest  # type: ignore
 from typing import Sequence
 
@@ -16,7 +17,19 @@ from sheets import (
     Users,
     WhollySheet,
     converter,
+    Projects,
 )
+
+import schema
+from server import main
+
+
+@pytest.fixture
+def flask_client(
+    spreadsheet,
+):  # not using return value of fixture, but including it causes it to run
+    with main.app.test_client() as client:
+        yield client
 
 
 @pytest.fixture(name="WhollySheet")
@@ -60,6 +73,13 @@ def instantiate_registrations(spreadsheet_client, spreadsheet):
     return Registrations(client=client, spreadsheet_id=spreadsheet["spreadsheetId"])
 
 
+@pytest.fixture(name="projects")
+def instantiate_projects(spreadsheet_client, spreadsheet):
+    """Creates and returns an instance of Projects"""
+    client = spreadsheet_client.values()
+    return Projects(client=client, spreadsheet_id=spreadsheet["spreadsheetId"])
+
+
 @pytest.fixture(scope="session")
 def create_test_sheet(spreadsheet_client, test_data, drive_client):
     """Create a test sheet and populate it with test data"""
@@ -69,44 +89,75 @@ def create_test_sheet(spreadsheet_client, test_data, drive_client):
     drive_client.files().delete(fileId=response["spreadsheetId"]).execute()
 
 
+# TODO figure out why this throws pytest errors
+# @pytest.fixture(name="tsv_files", scope="session")
+def get_tsv_files():
+    path = "tests/data"
+    files = [f"{path}/{f}" for f in os.listdir(path) if pathlib.Path(f).suffix == ".tsv"]
+    return files
+
+
+# @pytest.fixture(name="sheet_names", scope="session")
+def get_sheet_names():
+    files = [f for f in os.listdir("tests/data") if pathlib.Path(f).suffix == ".tsv"]
+    # get the base name of the file without the path
+    names = [os.path.splitext(pathlib.PurePath(f).name)[0] for f in files]
+    return names
+
+
 @pytest.fixture(name="spreadsheet")
 def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_client):
     """Reset spreadsheet values between tests."""
 
+    # TODO why isn't this working as the variable for ranges in the body below?
+    # tabs = get_sheet_names()
+    # ranges = [f"{t}!A1:end" for t in tabs]   # ["users!A1:end", "hackathons!A1:end", "registrations!A1:end"]
+    # print(ranges)
     spreadsheet_id = create_test_sheet["spreadsheetId"]
     spreadsheet_client.values().batchClear(
         spreadsheetId=spreadsheet_id,
-        body={"ranges": ["users!A1:end", "hackathons!A1:end", "registrations!A1:end"]},
+        body={"ranges": ['projects!A1:end', 'registrations!A1:end', 'hackathons!A1:end', 'users!A1:end']},
     ).execute()
 
+    # TODO make this a data-driven loop
     for sheet in create_test_sheet["sheets"]:
-        if sheet["properties"]["title"] == "users":
-            user_sheet_id = sheet["properties"]["sheetId"]
-        if sheet["properties"]["title"] == "hackathons":
-            hackathon_sheet_id = sheet["properties"]["sheetId"]
+        if sheet["properties"]["title"] == "projects":
+            project_sheet_id = sheet["properties"]["sheetId"]
         if sheet["properties"]["title"] == "registrations":
             registration_sheet_id = sheet["properties"]["sheetId"]
+        if sheet["properties"]["title"] == "hackathons":
+            hackathon_sheet_id = sheet["properties"]["sheetId"]
+        if sheet["properties"]["title"] == "users":
+            user_sheet_id = sheet["properties"]["sheetId"]
+
     updates = {
         "requests": [
             {
                 "appendCells": {
-                    "sheetId": user_sheet_id,
+                    "sheetId": project_sheet_id,
                     "fields": "userEnteredValue",
                     "rows": test_data["sheets"][0]["data"][0]["rowData"],
                 }
             },
             {
                 "appendCells": {
-                    "sheetId": hackathon_sheet_id,
+                    "sheetId": registration_sheet_id,
                     "fields": "userEnteredValue",
                     "rows": test_data["sheets"][1]["data"][0]["rowData"],
                 }
             },
             {
                 "appendCells": {
-                    "sheetId": registration_sheet_id,
+                    "sheetId": hackathon_sheet_id,
                     "fields": "userEnteredValue",
                     "rows": test_data["sheets"][2]["data"][0]["rowData"],
+                }
+            },
+            {
+                "appendCells": {
+                    "sheetId": user_sheet_id,
+                    "fields": "userEnteredValue",
+                    "rows": test_data["sheets"][3]["data"][0]["rowData"],
                 }
             },
         ]
@@ -115,12 +166,12 @@ def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_cli
     yield create_test_sheet
 
 
-@pytest.fixture(name="test_users")
-def get_test_users(test_data):
+@pytest.fixture(name="test_projects")
+def get_test_projects(test_data):
     """Returns a list of dicts representing the users sheet"""
-    users_sheet = test_data["sheets"][0]
-    assert users_sheet["properties"]["title"] == "users"
-    return create_sheet_repr(users_sheet, User)
+    projects_sheet = test_data["sheets"][0]
+    assert projects_sheet["properties"]["title"] == "projects"
+    return create_sheet_repr(projects_sheet, Projects)
 
 
 @pytest.fixture(name="test_hackathons")
@@ -137,6 +188,14 @@ def get_test_registrants(test_data):
     registrations_sheet = test_data["sheets"][2]
     assert registrations_sheet["properties"]["title"] == "registrations"
     return create_sheet_repr(registrations_sheet, Registration)
+
+
+@pytest.fixture(name="test_users")
+def get_test_users(test_data):
+    """Returns a list of dicts representing the users sheet"""
+    users_sheet = test_data["sheets"][3]
+    assert users_sheet["properties"]["title"] == "users"
+    return create_sheet_repr(users_sheet, User)
 
 
 def create_sheet_repr(sheet, model):
@@ -178,8 +237,10 @@ def get_data(sheet):
 @pytest.fixture(scope="session")
 def test_data():
     """Load the test data"""
-    with open("tests/data/data.json", "r") as f:
-        data = json.load(f)
+    # with open("tests/data/data.json", "r") as f:
+    #     data = json.load(f)
+    files = get_tsv_files()
+    data = schema.import_sheet_data(files)
     return data
 
 

@@ -1,7 +1,9 @@
+import csv
 import enum
 import difflib
 from typing import Dict, Generic, List, Optional, Union, Sequence, Type, TypeVar, Any
 import os.path
+import pathlib
 from google.oauth2 import service_account  # type: ignore
 import googleapiclient.errors  # type: ignore
 import googleapiclient.discovery  # type: ignore
@@ -352,6 +354,83 @@ class SchemaReader:
 
     def debug(self):
         return self.schema.debug()
+
+
+def import_schema(files: List[str]) -> List[str]:
+    tabs: List[str] = []
+    for file in files:
+        sheet = os.path.splitext(pathlib.PurePath(file).name)[0]
+        data = ",".join(import_header_row(file))
+        entry = f"{sheet}:{data}"
+        tabs.append(entry)
+    return tabs
+
+
+def import_header_row(tsv: str, delim: str = "") -> List[str]:
+    with open(tsv) as f:
+        # read the first line of the file, stripping newline
+        line = f.readline().strip()
+
+    if len(line) == 0:
+        return []
+
+    # Default delimiter to tab if tab is found
+    if line.index('\t'):
+        delim = '\t'
+    else:
+        delim = ','
+
+    return line.split(delim)
+
+
+def import_sheet_data(files: List[str], title: str = "Hackathons Test Data") -> Dict[str, List[dict]]:
+    """
+    Imports all tsv files listed into a single sheet definition
+    :param title: Default title for test sheet
+    :param files: tsv files to import
+    :return: GSheets structure that can be used to create an entire sheet
+    """
+    tabs: List[Dict] = []
+    for file in files:
+        sheet = os.path.splitext(pathlib.PurePath(file).name)[0]
+        data = import_row_data(file)
+        entry = {"properties": {"title": sheet}, "data": [{"rowData": data}]}
+        tabs.append(entry)
+
+    return {"sheets": tabs, "properties": {"title": title}}
+
+
+def import_row_data(tsv: str, delim: str = "") -> List[Dict]:
+    """
+    Convert a tsv file into GSheets rowData
+    :param tsv: tsf file name to parse
+    :param delim Defaults to the tab character. Can be any string
+    :return: row Data in GSheets form
+    """
+    result: List[Dict] = []
+    with open(tsv) as f:
+        lines = [line.strip() for line in f.readlines()]
+
+    if len(lines) == 0:
+        return result
+
+    # Default delimiter to tab if tab is found
+    if lines[0].index('\t'):
+        delim = '\t'
+    else:
+        delim = ','
+
+    for row in lines:
+        if not row:  # skip blank lines
+            continue
+        result.append({"values": list_to_values(row.split(delim))})
+
+    return result
+
+
+def list_to_values(values: List[str]) -> List[Dict[str, Dict[str, str]]]:
+    """Convert an array of strings to a GSheet values dictionary"""
+    return [{"userEnteredValue": {"stringValue": bit}} for bit in values]
 
 
 if __name__ == "__main__":

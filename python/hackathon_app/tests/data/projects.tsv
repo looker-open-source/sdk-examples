@@ -1,0 +1,4 @@
+id	registration_id	title	description	date_created	project_type	contestant	locked	technologies
+1	5	Lloyd's project	A very special project	2020-02-20T15:52:27.498123+00:00	Open	1	0	everything
+2	6	Zach's zoom	An enlarging project	2020-02-21T15:52:27.498123+00:00	Open	1	0	asdf
+3	8	Amanda's apothecary	Chemical analysis	2020-02-22T15:52:27.498123+00:00	Closed	1	0	cde

@@ -2,8 +2,6 @@ import datetime
 
 from sheets import Registration, Registrations
 
-DATE_FORMAT = "%m/%d/%Y"
-
 
 def test_rows_returns_registrants(registrations: Registrations, test_registrants):
     """rows() should return a list of Registration objects"""

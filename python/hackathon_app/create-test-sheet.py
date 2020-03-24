@@ -35,6 +35,7 @@ os.remove("./google-creds.json")
 
 service = discovery.build("sheets", "v4", credentials=credentials)
 spreadsheet_client = service.spreadsheets()
+# TODO replace this with the import_sheet_data() results
 with open("tests/data/data.json", "r") as t:
     test_data = json.load(t)
 request = spreadsheet_client.create(body=test_data)

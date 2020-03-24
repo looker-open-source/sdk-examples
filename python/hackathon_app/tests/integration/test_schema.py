@@ -2,6 +2,15 @@ from typing import List
 
 import schema
 import sheets
+import os
+import pathlib
+
+
+# TODO put this dang function in one place!
+def get_tsv_files():
+    path = "tests/data"
+    files = [f"{path}/{f}" for f in os.listdir(path) if pathlib.Path(f).suffix == ".tsv"]
+    return files
 
 
 def check_delta(test: str, delta: List[schema.Delta]):
@@ -28,6 +37,18 @@ def test_to_lines():
     tab = schema.SchemaTab(line=line)
     lines = tab.to_lines()
     assert line == lines
+
+
+def test_import_compare(test_schema):
+    files = get_tsv_files()
+    data = schema.import_schema(files)
+    assert len(data) == len(files)
+    imported = schema.SchemaSheet(lines="\n".join(data))
+    actual = schema.SchemaSheet(lines=test_schema)
+    delta = actual.compare(imported)
+    check_delta("Schema vs. TSVs", delta)
+    # There are currently 4 missing tabs amd 5 column renames
+    assert len(delta) == 9
 
 
 def test_model_compare(test_schema):

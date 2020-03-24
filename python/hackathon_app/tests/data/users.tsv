@@ -1,0 +1,5 @@
+id	first_name	last_name	email	client_id	client_secret	organization	org_role	date_created	tshirt_size	setup_link
+1	Lloyd	LLookicorn	lloyd@foo.com			Looker	CTO	2012-05-04T15:52:27.498123+00:00	M
+2	Zachary	Zoomify	zach@bar.com			Foo	Bar	2018-11-04T15:52:27.498123+00:00	L
+3	Balthazar	Bombastic	blthzr@quz.com			Quz	Quzzer	2019-11-09T15:52:27.498123+00:00	S
+4	Amanda	Smith	amanda@baz.com			Baz	Bazifier	2019-02-20T15:52:27.498123+00:00	S

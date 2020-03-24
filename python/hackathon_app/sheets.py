@@ -13,6 +13,9 @@ import googleapiclient.discovery  # type: ignore
 
 NIL = "\x00"
 
+# TODO Make this UTC date format
+DATE_FORMAT = "%m/%d/%Y"
+
 
 def get_model_schema_lines() -> str:
     """
@@ -136,7 +139,7 @@ class WhollySheet(Generic[TModel]):
         self.converter = converter
 
     def save(self, model: TModel):
-        if model.id:
+        if model.row_id:
             self.update(model)
         else:
             self.create(model)

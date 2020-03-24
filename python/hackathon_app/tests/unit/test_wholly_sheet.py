@@ -8,7 +8,7 @@ from sheets import WhollySheet, DATE_FORMAT
 def test_convert_to_list_returns_list(WhollySheet: WhollySheet):
     """_convert_to_list() should convert a dict into a list"""
     data = {
-        "id": 5,
+        "row_id": 5,
         "first_name": "John",
         "last_name": "Doe",
         "email": "john@foo.com",
@@ -33,22 +33,22 @@ def test_convert_to_list_returns_list(WhollySheet: WhollySheet):
     [
         (
             [
-                ["user_email", "hackathon_name", "date_registered", "attended"],
+                ["user_email", "hackathon_id", "date_registered", "attended"],
                 ["jane@bar.com", "london2019", "6/10/2019", "True"],
                 ["john@foo.com", "london2019", "6/11/2019", "False"],
             ],
             [
                 {
-                    "id": 2,
+                    "row_id": 2,
                     "user_email": "jane@bar.com",
-                    "hackathon_name": "london2019",
+                    "hackathon_id": "london2019",
                     "date_registered": "6/10/2019",
                     "attended": "True",
                 },
                 {
-                    "id": 3,
+                    "row_id": 3,
                     "user_email": "john@foo.com",
-                    "hackathon_name": "london2019",
+                    "hackathon_id": "london2019",
                     "date_registered": "6/11/2019",
                     "attended": "False",
                 },

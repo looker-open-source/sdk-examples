@@ -1,5 +1,5 @@
 hackathons:id,name,description,location,date,duration_in_days,max_team_size,judging_starts,judging_stops
-users:id~email,first_name,last_name,client_id,client_secret,organization,org_role~role,date_created,tshirt_size,setup_link
+users:id,first_name,last_name,email,client_id,client_secret,organization,org_role~role,date_created,tshirt_size,setup_link
 registrations:id,user_id~user_email,hackathon_id~hackathon_name,date_registered,attended
 projects:id,registration_id,title,description,date_created,project_type,contestant,locked,technologies
 project_technologies:project_id,technology_id

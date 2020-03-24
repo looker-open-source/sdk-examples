@@ -1,4 +1,5 @@
 import datetime
+from pprint import pprint
 from typing import Optional
 
 from cryptography import fernet
@@ -74,12 +75,14 @@ class Authentication:
     def auth_user(self, auth_code: str) -> Optional[sheets.User]:
         """Authenticate the user from the auth code
 
-        :param value: string value of an auth code
+        :param auth_code: String value of an auth code
         :return: a sheets.User or None if no corresponding user found
         """
-        token = self.crypto.decrypt(auth_code)
-        email = token.split("~")[0]
-        return self.sheet.users.find(email)
+        token = self.crypto.decrypt(auth_code).split("~")
+        pprint(token)
+        # TODO this needs to be more dynamic
+        email = token[0]
+        return self.sheet.users.find(email, key="email")
 
     def send_auth_message(self, user: sheets.User, host_url: str) -> None:
         """Send the email authentication link to the user.
