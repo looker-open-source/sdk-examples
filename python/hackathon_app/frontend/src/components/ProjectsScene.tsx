@@ -11,11 +11,10 @@ export const ProjectsScene: FC<{path: string}> = () => {
   useEffect(() => {
     async function fetchProjects() {
       try {
-        const projects = ((await fetch('/projects')) as unknown) as IProject[]
-        console.log(projects)
+        const projects = await fetch('/projects')
         dispatch({
           type: 'POPULATE_PROJECTS',
-          payload: projects,
+          payload: (await projects.json()) as IProject[],
         })
       } catch (e) {
         console.error('Something went wrong', e)
@@ -25,8 +24,7 @@ export const ProjectsScene: FC<{path: string}> = () => {
   }, [])
 
   return (
-    // <ProjectsContext.Provider value={projects}>
-    <>
+    <ProjectsContext.Provider value={{projects, dispatch}}>
       <p>This is the projects board</p>
       <ProjectList />
       <Button
@@ -36,7 +34,6 @@ export const ProjectsScene: FC<{path: string}> = () => {
       >
         Add Project
       </Button>
-    </>
-    // </ProjectsContext.Provider> */
+    </ProjectsContext.Provider>
   )
 }

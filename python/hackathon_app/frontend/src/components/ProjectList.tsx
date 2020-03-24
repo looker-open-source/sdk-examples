@@ -1,4 +1,4 @@
-import React, {FC, useState} from 'react'
+import React, {FC, useState, useContext} from 'react'
 import {
   ActionList,
   ActionListHeaderColumn,
@@ -8,22 +8,23 @@ import {
   ActionListItemAction,
 } from '@looker/components'
 import ProjectModal from './ProjectModal'
+import ProjectsContext from '../context/projects'
 
-const data = [
-  {
-    projectId: 1,
-    title: 'Python SDK',
-    description: 'A strongly typed SDK for the Looker API',
-    projectType: 'Open',
-  },
-  {
-    projectId: 2,
-    title: 'TypeScript SDK',
-    description: 'A strongly typed SDK for the Looker API',
-    projectType: 'Open',
-    contestant: 'Yes',
-  },
-]
+// const data = [
+//   {
+//     projectId: 1,
+//     title: 'Python SDK',
+//     description: 'A strongly typed SDK for the Looker API',
+//     projectType: 'Open',
+//   },
+//   {
+//     projectId: 2,
+//     title: 'TypeScript SDK',
+//     description: 'A strongly typed SDK for the Looker API',
+//     projectType: 'Open',
+//     contestant: 'Yes',
+//   },
+// ]
 
 const header = (
   <>
@@ -70,6 +71,7 @@ const columns: ActionListColumns = [
 const ProjectList: FC = () => {
   const [isModalOpen, setModalOpen] = useState(false)
   const [modalTitle, setModalTitle] = useState('')
+  let {projects, dispatch} = useContext(ProjectsContext)
 
   const handleModalOpen = (title: string) => {
     setModalTitle(title)
@@ -80,10 +82,10 @@ const ProjectList: FC = () => {
     setModalOpen(false)
   }
 
-  const items = data.map(
-    ({projectId, title, description, projectType, contestant}) => (
+  const items = projects.map(
+    ({id, title, description, project_type, contestant}) => (
       <ActionListItem
-        key={projectId}
+        key={id}
         actions={
           <>
             <ActionListItemAction
@@ -96,7 +98,7 @@ const ProjectList: FC = () => {
       >
         <ActionListItemColumn>{title}</ActionListItemColumn>
         <ActionListItemColumn>{description}</ActionListItemColumn>
-        <ActionListItemColumn>{projectType}</ActionListItemColumn>
+        <ActionListItemColumn>{project_type}</ActionListItemColumn>
         <ActionListItemColumn>{contestant}</ActionListItemColumn>
       </ActionListItem>
     )
