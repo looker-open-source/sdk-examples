@@ -5,6 +5,7 @@ import {Router} from '@reach/router'
 import {Logo} from './Logo'
 import {RegisterScene} from './RegisterScene'
 import {ResourcesScene} from './ResourcesScene'
+import {EditableGrid as ProjectsScene} from './components/ProjectsScene'
 
 const App: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const App: React.FC = () => {
             <RegisterScene path="/registration" />
             <ResourcesScene path="/" />
             <ResourcesScene path="/thankyou" />
+            <ProjectsScene path="/projects" />
           </Router>
         </Card>
       </Flex>
