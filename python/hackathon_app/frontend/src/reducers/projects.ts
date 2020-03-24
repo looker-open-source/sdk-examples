@@ -1,36 +1,37 @@
-import moment from 'moment'
-
 export interface IProject {
   id: string
-  registrationId: string
+  registration_id: string
   title: string
   description: string
-  dateCreated: moment.Moment
-  projectType: string
+  date_created: Date
+  project_type: string
   contestant: boolean
   locked: boolean
 }
 
 const projectsReducer = (
   state: IProject[],
-  action: {type: string; payload: Partial<IProject>}
-) => {
+  action: {type: string; payload: IProject[]}
+): IProject[] => {
+  const firstProject = action.payload[0]
   switch (action.type) {
+    case 'POPULATE_PROJECTS':
+      return action.payload
     case 'ADD_PROJECT':
-      return [...state, action.payload]
+      return [...state, firstProject]
     case 'EDIT_PROJECT':
       return state.map(project => {
-        if (project.id === action.payload.id) {
+        if (project.id === firstProject.id) {
           return {
             ...project,
-            ...action.payload,
+            ...firstProject,
           }
         } else {
           return project
         }
       })
     case 'REMOVE_PROJECT':
-      return state.filter(project => project.id !== action.payload.id)
+      return state.filter(project => project.id !== firstProject.id)
     default:
       return state
   }
