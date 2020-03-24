@@ -36,6 +36,7 @@ def get_model_schema() -> schema.SchemaSheet:
 @attr.s(auto_attribs=True, kw_only=True)
 class RegisterUser:
     hackathon_id: str
+    user_id: str
     first_name: str
     last_name: str
     email: str
@@ -75,9 +76,10 @@ class Sheets:
         """Get names of active hackathons."""
         return self.hackathons.get_upcoming()
 
-    def register_user(self, register_user: RegisterUser):
+    def register_user(self, register_user: RegisterUser) -> "User":
         """Register user to a hackathon"""
-        user = self.users.find(register_user.email, key="email") or User()
+        user = self.users.find(register_user.user_id) or self.users.find(register_user.email, key="email") or User()
+        user.id = register_user.user_id
         user.first_name = register_user.first_name
         user.last_name = register_user.last_name
         user.email = register_user.email
@@ -140,10 +142,10 @@ class WhollySheet(Generic[TModel]):
 
     def save(self, model: TModel):
         if model.row_id:
-            self.update(model)
-        else:
-            self.create(model)
+            return self.update(model)
+        return self.create(model)
 
+    # TODO return the created TModel
     def create(self, model: TModel):
         """Create the model data as a row into sheet"""
         try:
@@ -186,6 +188,7 @@ class WhollySheet(Generic[TModel]):
             raise SheetError(str(ex))
         return response
 
+    # TODO return the updated TModel
     def update(self, model: TModel):
         """Update user"""
         try:
@@ -210,7 +213,8 @@ class WhollySheet(Generic[TModel]):
         key = key if key else self.key
         ret = None
         for row in self.rows():
-            if getattr(row, key) == value:
+            val = getattr(row, key)
+            if val == value:
                 ret = row
                 break
         return ret
@@ -245,14 +249,14 @@ class User(Model):
     first_name: str = ""
     last_name: str = ""
     email: str = ""
+    client_id: str = ""
+    client_secret: str = ""
+    organization: str = ""
+    org_role: str = ""
     date_created: datetime.datetime = attr.ib(
         default=attr.Factory(lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     )
-    organization: str = ""
-    role: str = ""
     tshirt_size: str = ""
-    client_id: str = ""
-    client_secret: str = ""
     setup_link: str = ""
 
 
@@ -276,6 +280,14 @@ class Hackathon(Model):
         default=attr.Factory(lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     )
     duration_in_days: int = 1
+    max_team_size: int = 5
+    # TODO get these properties defaulting and reading correctly
+    # judging_starts: datetime.datetime = attr.ib(
+    #     default=attr.Factory(lambda: datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(hours=10))
+    # )
+    # judging_stops: datetime.datetime = attr.ib(
+    #     default=attr.Factory(lambda: datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(hours=12))
+    # )
 
 
 class Hackathons(WhollySheet[Hackathon]):

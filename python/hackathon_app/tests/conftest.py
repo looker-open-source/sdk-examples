@@ -3,7 +3,7 @@ import json
 import os
 import pathlib
 import pytest  # type: ignore
-from typing import Sequence
+from typing import Sequence, List, Dict
 
 from google.oauth2 import service_account  # type: ignore
 from googleapiclient import discovery  # type: ignore
@@ -89,7 +89,7 @@ def create_test_sheet(spreadsheet_client, test_data, drive_client):
     drive_client.files().delete(fileId=response["spreadsheetId"]).execute()
 
 
-# TODO figure out why this throws pytest errors
+# TODO figure out why making this a fixture throws pytest errors
 # @pytest.fixture(name="tsv_files", scope="session")
 def get_tsv_files():
     path = "tests/data"
@@ -97,6 +97,7 @@ def get_tsv_files():
     return files
 
 
+# TODO figure out why making this a fixture throws pytest errors
 # @pytest.fixture(name="sheet_names", scope="session")
 def get_sheet_names():
     files = [f for f in os.listdir("tests/data") if pathlib.Path(f).suffix == ".tsv"]
@@ -104,6 +105,12 @@ def get_sheet_names():
     names = [os.path.splitext(pathlib.PurePath(f).name)[0] for f in files]
     return names
 
+
+def sheet_pos(name: str) -> int:
+    names = get_sheet_names()
+    result = names.index(name)
+    assert result >= 0
+    return result
 
 @pytest.fixture(name="spreadsheet")
 def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_client):
@@ -136,28 +143,28 @@ def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_cli
                 "appendCells": {
                     "sheetId": project_sheet_id,
                     "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][0]["data"][0]["rowData"],
+                    "rows": test_data["sheets"][sheet_pos("projects")]["data"][0]["rowData"],
                 }
             },
             {
                 "appendCells": {
                     "sheetId": registration_sheet_id,
                     "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][1]["data"][0]["rowData"],
+                    "rows": test_data["sheets"][sheet_pos("registrations")]["data"][0]["rowData"],
                 }
             },
             {
                 "appendCells": {
                     "sheetId": hackathon_sheet_id,
                     "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][2]["data"][0]["rowData"],
+                    "rows": test_data["sheets"][sheet_pos("hackathons")]["data"][0]["rowData"],
                 }
             },
             {
                 "appendCells": {
                     "sheetId": user_sheet_id,
                     "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][3]["data"][0]["rowData"],
+                    "rows": test_data["sheets"][sheet_pos("users")]["data"][0]["rowData"],
                 }
             },
         ]
@@ -166,35 +173,37 @@ def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_cli
     yield create_test_sheet
 
 
+def find_sheet(test_data, name: str) -> List[Dict]:
+    result = test_data["sheets"][sheet_pos(name)]
+    assert result["properties"]["title"] == name
+    return result
+
+
 @pytest.fixture(name="test_projects")
 def get_test_projects(test_data):
     """Returns a list of dicts representing the users sheet"""
-    projects_sheet = test_data["sheets"][0]
-    assert projects_sheet["properties"]["title"] == "projects"
+    projects_sheet = find_sheet(test_data, "projects")
     return create_sheet_repr(projects_sheet, Projects)
-
-
-@pytest.fixture(name="test_hackathons")
-def get_test_hackathons(test_data):
-    """Returns a list of dicts representing the hackathons sheet"""
-    hackathons_sheet = test_data["sheets"][1]
-    assert hackathons_sheet["properties"]["title"] == "hackathons"
-    return create_sheet_repr(hackathons_sheet, Hackathon)
 
 
 @pytest.fixture(name="test_registrants")
 def get_test_registrants(test_data):
     """Returns a list of dicts representing the registrations sheet"""
-    registrations_sheet = test_data["sheets"][2]
-    assert registrations_sheet["properties"]["title"] == "registrations"
+    registrations_sheet = find_sheet(test_data, "registrations")
     return create_sheet_repr(registrations_sheet, Registration)
+
+
+@pytest.fixture(name="test_hackathons")
+def get_test_hackathons(test_data):
+    """Returns a list of dicts representing the hackathons sheet"""
+    hackathons_sheet = find_sheet(test_data, "hackathons")
+    return create_sheet_repr(hackathons_sheet, Hackathon)
 
 
 @pytest.fixture(name="test_users")
 def get_test_users(test_data):
     """Returns a list of dicts representing the users sheet"""
-    users_sheet = test_data["sheets"][3]
-    assert users_sheet["properties"]["title"] == "users"
+    users_sheet = find_sheet(test_data, "users")
     return create_sheet_repr(users_sheet, User)
 
 

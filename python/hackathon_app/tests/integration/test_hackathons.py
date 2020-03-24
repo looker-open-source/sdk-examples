@@ -4,6 +4,15 @@ from typing import List
 import sheets
 
 
+def compare_hackathon(expected: sheets.Hackathon, actual: sheets.Hackathon):
+    assert expected.id == actual.id
+    assert expected.name == actual.name
+    assert expected.date == actual.date
+    assert expected.description == actual.description
+    assert expected.duration_in_days == actual.duration_in_days
+    assert expected.location == actual.location
+
+
 def test_rows_returns_hackathons(
     hackathons: sheets.Hackathons, test_hackathons: List[sheets.Hackathon]
 ):
@@ -14,7 +23,7 @@ def test_rows_returns_hackathons(
 
     hackathon = all_hackathons[0]
     expected = test_hackathons[0]
-    assert hackathon == expected
+    compare_hackathon(expected, hackathon)
 
 
 def test_get_upcoming_hackathons(
@@ -25,7 +34,8 @@ def test_get_upcoming_hackathons(
         (h for h in test_hackathons if h.date >= now), key=lambda ht: ht.id
     )
     up_coming_actual = sorted(hackathons.get_upcoming(), key=lambda ht: ht.id)
-    assert up_coming_actual == up_coming_expected
+    for index, actual in enumerate(up_coming_actual):
+        compare_hackathon(up_coming_expected[index], actual)
 
 
 def test_get_upcoming_hackathons_with_cutoff(
