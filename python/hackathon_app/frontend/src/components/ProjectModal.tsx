@@ -14,9 +14,10 @@ import {
 interface IProps {
   isOpen: boolean
   handleModalClose: CallableFunction
+  title: string
 }
 
-export const Modal: React.FC<IProps> = ({isOpen, handleModalClose}) => {
+const ProjectModal: React.FC<IProps> = ({isOpen, handleModalClose, title}) => {
   /**
    * Track form input state, and create helper function to compare updated state to default state
    */
@@ -95,7 +96,7 @@ export const Modal: React.FC<IProps> = ({isOpen, handleModalClose}) => {
         width="500px"
       >
         <ConfirmLayout
-          title="Edit Project Entry"
+          title={title}
           message={
             <form>
               <FieldText
@@ -156,3 +157,5 @@ export const Modal: React.FC<IProps> = ({isOpen, handleModalClose}) => {
     </>
   )
 }
+
+export {ProjectModal as default}
