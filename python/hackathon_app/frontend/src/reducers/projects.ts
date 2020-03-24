@@ -9,9 +9,14 @@ export interface IProject {
   locked: boolean
 }
 
+export interface ProjectAction {
+  type: string
+  payload: IProject[]
+}
+
 const projectsReducer = (
   state: IProject[],
-  action: {type: string; payload: IProject[]}
+  action: ProjectAction
 ): IProject[] => {
   const firstProject = action.payload[0]
   switch (action.type) {

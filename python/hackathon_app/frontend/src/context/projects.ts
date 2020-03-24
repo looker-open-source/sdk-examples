@@ -1,12 +1,15 @@
+import noop from 'lodash/noop'
 import React, {Dispatch} from 'react'
-import {IProject} from '../reducers/projects'
+import {IProject, ProjectAction} from '../reducers/projects'
 
-const initialObject: {
+export interface ProjectContextProps {
   projects: IProject[]
-  dispatch: React.Dispatch<{action: string; payload: IProject[]}>
-} = {
+  dispatch: Dispatch<ProjectAction>
+}
+
+const initialObject: ProjectContextProps = {
   projects: [],
-  dispatch: '',
+  dispatch: noop,
 }
 
 const ProjectsContext = React.createContext(initialObject)
