@@ -1,33 +1,67 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect, useContext} from 'react'
 import {isEqual} from 'lodash'
 import {
   Dialog,
   ConfirmLayout,
-  Box,
   Icon,
-  Heading,
   FieldText,
+  Divider,
+  ButtonToggle,
+  ButtonItem,
+  Text,
+  ToggleSwitch,
+  Label,
   Button,
   ButtonTransparent,
+  FieldTextArea,
 } from '@looker/components'
+import {IProject} from '../reducers/projects'
+import ProjectsContext from '../context/projects'
 
 interface IProps {
   isOpen: boolean
   handleModalClose: CallableFunction
-  title: string
+  project?: IProject
 }
 
-const ProjectModal: React.FC<IProps> = ({isOpen, handleModalClose, title}) => {
+const ProjectModal: React.FC<IProps> = ({
+  isOpen,
+  handleModalClose,
+  project,
+}) => {
+  const {dispatch} = useContext(ProjectsContext)
+
   /**
    * Track form input state, and create helper function to compare updated state to default state
    */
-  const defaultFormData = {
+  let defaultFormData = {
     title: '',
     description: '',
     type: '',
     contestant: '',
   }
   const [formData, setFormData] = useState(defaultFormData)
+  const [isCancellingInput, setIsCancellingInput] = useState(false)
+
+  const [isContestant, setIsContestant] = useState(
+    project ? project.contestant : true
+  )
+
+  const [projectType, setProjectType] = useState(
+    project ? project.project_type : 'Open'
+  )
+
+  useEffect(() => {
+    defaultFormData = {
+      title: project ? project.title : '',
+      description: project ? project.description : '',
+      type: project ? project.project_type : '',
+      contestant: project ? project.contestant.toString() : '',
+    }
+    setProjectType(project ? project.project_type : 'Open')
+    setIsContestant(project ? project.contestant : true)
+    setFormData(defaultFormData)
+  }, [isOpen])
 
   const hasUnsavedChanges = () => {
     if (isEqual(formData, defaultFormData)) {
@@ -45,18 +79,23 @@ const ProjectModal: React.FC<IProps> = ({isOpen, handleModalClose, title}) => {
   /**
    * Track dialog state: open, close, or cancelling input
    */
-  const [isCancellingInput, setIsCancellingInput] = useState(false)
-
-  /**
-   * Create callbacks for the various actions:
-   * - save
-   * - cancel
-   * - confirm close (e.g. "Yes I want to discard my changes and close the dialog")
-   * - reset form (e.g. "Don't close, let me continue editing")
-   */
 
   const handleSave = () => {
-    alert('Saved!') // dispatch side effect
+    dispatch({
+      type: project ? 'EDIT_PROJECT' : 'ADD_PROJECT',
+      payload: [
+        {
+          // TODO: this will change when backend endpoints are in place
+          ...formData,
+          id: project ? project.id : '100',
+          registration_id: '100',
+          date_created: new Date(),
+          project_type: 'Invite Only',
+          locked: false,
+          contestant: false,
+        },
+      ],
+    })
     handleModalClose() // close dialog
     setFormData(defaultFormData) // reset form state
   }
@@ -96,7 +135,7 @@ const ProjectModal: React.FC<IProps> = ({isOpen, handleModalClose, title}) => {
         width="500px"
       >
         <ConfirmLayout
-          title={title}
+          title="Enter project details below"
           message={
             <form>
               <FieldText
@@ -105,24 +144,32 @@ const ProjectModal: React.FC<IProps> = ({isOpen, handleModalClose, title}) => {
                 onChange={handleInputChange}
                 value={formData.title}
               />
-              <FieldText
+              <FieldTextArea
                 name="description"
                 label="Description"
                 onChange={handleInputChange}
                 value={formData.description}
               />
-              <FieldText
-                name="type"
-                label="Type"
-                onChange={handleInputChange}
-                value={formData.type}
-              />
-              <FieldText
-                name="contestant"
-                label="Contestant"
-                onChange={handleInputChange}
-                value={formData.contestant}
-              />
+
+              <Text fontSize="small">Type</Text>
+              <Divider customColor="white" />
+              <ButtonToggle value={projectType} onChange={setProjectType}>
+                <ButtonItem>Open</ButtonItem>
+                <ButtonItem>Invite Only</ButtonItem>
+                <ButtonItem>Closed</ButtonItem>
+                <ButtonItem>Yuri</ButtonItem>
+              </ButtonToggle>
+
+              <Divider customColor="white" />
+
+              <Label htmlFor="switch">
+                Locked
+                <ToggleSwitch
+                  onChange={() => setIsContestant(!isContestant)}
+                  on={isContestant}
+                  id="switch"
+                />
+              </Label>
             </form>
           }
           primaryButton={<Button onClick={handleSave}>Save</Button>}
