@@ -5,4 +5,4 @@ projects:id,registration_id,title,description,date_created,project_type,contesta
 project_technologies:project_id,technology_id
 technology:id,title,description
 team_member:user_id,project_id,responsibilities
-judging:user_id,project_id,execution,ambition,coolness,impact,notes,score
+judging:user_id,project_id,execution,ambition,coolness,impact,notes
