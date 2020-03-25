@@ -80,7 +80,45 @@ const ProjectModal: React.FC<IProps> = ({
    * Track dialog state: open, close, or cancelling input
    */
 
-  const handleSave = () => {
+  const saveProject = async (project: any) => {
+    async function postData() {
+      let method = 'POST'
+      let restCall = '/projects'
+      const copy = JSON.parse(JSON.stringify(project))
+      delete copy['date_created']
+      const values = JSON.stringify(copy, null, 2)
+      if (project) {
+        method = 'PATCH'
+        restCall = `/projects/${project.id}`
+        try {
+          const result = await fetch(restCall, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: values,
+          })
+          const msg = await result.json()
+          if (msg.ok) {
+            // do a "saved" sparkle? navigate('/thankyou')
+          } else {
+            console.error(msg.message)
+          }
+        } catch (e) {
+          // TODO: hack for local frontend dev
+          console.error(e)
+          console.debug(values)
+        }
+      }
+    }
+
+    return await postData()
+
+  }
+
+  const handleSave = async () => {
+    // TODO get saveProject() working
+    // await saveProject(project)
     dispatch({
       type: project ? 'EDIT_PROJECT' : 'ADD_PROJECT',
       payload: [
@@ -163,7 +201,7 @@ const ProjectModal: React.FC<IProps> = ({
               <Divider customColor="white" />
 
               <Label htmlFor="switch">
-                Locked
+                Judge this project?
                 <ToggleSwitch
                   onChange={() => setIsContestant(!isContestant)}
                   on={isContestant}
