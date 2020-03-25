@@ -1,0 +1,25 @@
+"""
+I’ve got about an hour before I need to go get my kids. Then, sadly I probably won’t be able to do much till Wednesday morning. So I’m just gonna think out loud here for a minute. Warning, this is kind of long and nothing really actionable here just yet:
+    It’s time for our hackathon app webserver to take the next step. Currently it provides some random endpoints that have grown organically because of lack of time to figure out the best practice. Here’s a description of the current state, mostly so I can page this all into my brain and then think about how it could be better to support more complex frontend workflows.
+    Data endpoints:
+        GET /hackathons => returns ["Join 2020", "The Great Chicago Hack", …]
+        POST /register (takes a form encoded payload of values to register a user)
+        GET /user_info => verifies identity based on a cookie we set and returns {"first_name": "John", "last_name": "Doe"}
+        Auth endpoints: two separate authentication workflows end up with the same result: if authenticated we set a cookie called looker_hackathon_auth with an encrypted payload that we can use to extract their email address and look them up in our users tab (note: needs to be changed to user.id when we implement that refactor). Both workflows are triggered from the “register for a hackathon” form.
+        Method 1: “sign in with google” button - the frontend uses react-google-login  to oauth with google and then asks the webserver to double check by hitting us on POST /verify_google_token  which basically tells the front end “ok”. The frontend then sets the hidden input email_verified  on the registration form and when we process it in POST /register  we trust that if that super secret hidden input form is marked true then they’ve authenticated and we set the cookie (no security loophole here whatsoever… yeah we need to do something better there)
+        Method 2: “don’t sign in with google, submit the form anyway” - in POST /register we see that email_verified is not checked. They still get added to the google sheet but we don’t set the cookie. Instead we send them an email with an auth code in the link to GET /auth/<auth_code>  which when they click it we set the cookie. BTW the auth code we send in the email would also work as the value for the cookie so potentially another security loophole here if their email got compromised?
+        Misc endpoints:
+            GET /csrf => don’t really know too much about anti csrf protection but trying to use it for the registration form
+            GET /status => for devops deployment/monitoring automation. make sure we can talk to google sheet and looker hack instance before returning an AOK
+            GET / and GET /<path:path> => hacks for production deployment where the flask server is serving everything: if we don’t have a more specific route to actually handle then pass it off to the static assets. Quick note: I’d love to use some other way to deploy our frontend and backend separately (firebase and google cloud function?) but for now, in order to be able to use th .looker.com domain we’re stuck with the devops way which is the actionhub/connectionhub way which is “give us a single docker image we can run that does all the things”
+            (edited)
+            9:37
+            Ok, how to do it better?
+            Data endpoints:
+                I started a set of REST endpoints for project management as part of this hackdays under /projects (CRUD but no delete yet). It’s an improvement over /hackathons, /register, and /user_info but I kind of feel like it’s old-school. I know Meredith is a huge fan of graphql for making developing the frontend way easier. Flask has a plugin for graphql… I’m really tempted to check it out. But maybe that’s for a future hack day if using  REST endpoints in our react frontend isn’t too onerous…
+                Authentication:
+                    I guess for now we can just keep doing the cookie setting/checking on the backend but I feel like we need more work here. If we stick with REST we should probably start expecting an Authorization header and implement some more formal mechanism to get a token to use for it. Not sure how graphql servers handle auth.
+                    I think we should get rid of the email_verified flag on the registration form. Probably it should be a “register with google” workflow that submits the form at the same time so we skip the insecure step of setting the hidden field and then trusting it was set legitimately when we process the form. The non-google verification would just be a different endpoint that automatically sends the email. We should probably have a separate token for sending in the email than what will work for the cookie value (maybe a “for_email” argument to authentication.get_user_auth_code() that puts a “for use in email” string in that we check for when reading the cookie value and fail authentication if it’s present?)
+                    Ok, thanks for listening :slightly_smiling_face:
+"""
+
