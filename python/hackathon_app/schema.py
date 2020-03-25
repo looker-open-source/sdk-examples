@@ -24,6 +24,29 @@ class Difference(enum.Enum):
     Remove = enum.auto()  # Old item should be removed
 
 
+def col_name(position: int) -> str:
+    a = ord('A')
+    if position > 25:
+        prepos = (position // 26) - 1
+        prefix = chr(a + prepos)
+        position = position % 26
+    else:
+        prefix = ""
+    letter = chr(a + position)
+    return prefix+letter
+
+
+def col_desc(position: int) -> str:
+    """
+    Returns a sheet column description from its ordinal position
+    Position starts at 0
+    | Position | Description |
+    0 | column 'A'
+    27 | column 'AA'
+    """
+    return f"column '{col_name(position)}'"
+
+
 class Delta:
     name: str = ""
     old_name: str = ""
@@ -57,15 +80,11 @@ class Delta:
         result += self.item.name
         return result
 
-    def col_name(self, position):
-        letter = chr(ord('A') + position)
-        return f"column '{letter}'"
-
     def debug(self):
         result = f"{self.desc()}: "
         if Difference.Position == self.diff:
             # This can only be set for columns
-            result += f"Move {self.name} from {self.col_name(self.old_position)} to {self.col_name(self.position)}. "
+            result += f"Move {self.name} from {col_desc(self.old_position)} to {col_desc(self.position)}. "
         if Difference.Name == self.diff:
             result += f"Rename '{self.old_name}' to '{self.name}'. "
         if Difference.OldName == self.diff:
@@ -73,10 +92,10 @@ class Delta:
         if Difference.Columns == self.diff:
             result += f"{self.name} Columns do not match'. "
         if Difference.Remove == self.diff:
-            result += f"Remove {self.name} at {self.col_name(self.position)}. "
+            result += f"Remove {self.name} at {col_desc(self.position)}. "
         if Difference.Missing == self.diff:
             if type(self.item).__name__ == "SchemaColumn":
-                result += f"Add '{self.name}' at {self.col_name(self.position)}. "
+                result += f"Add '{self.name}' at {col_desc(self.position)}. "
             else:
                 result += f"Create a new sheet called '{self.name}'. "
 

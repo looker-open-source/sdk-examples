@@ -3,6 +3,6 @@ users:id,first_name,last_name,email,client_id,client_secret,organization,org_rol
 registrations:id,user_id~user_email,hackathon_id~hackathon_name,date_registered,attended
 projects:id,registration_id,title,description,date_created,project_type,contestant,locked,technologies
 project_technologies:id,project_id,technology_id
-technology:id,title,description
-team_member:id,user_id,project_id,responsibilities
-judging:id,user_id,project_id,execution,ambition,coolness,impact,notes
+technologies:id,title,description
+team_members:id,user_id,project_id,responsibilities
+judgings:id,user_id,project_id,execution,ambition,coolness,impact,notes

@@ -119,59 +119,29 @@ def sheet_pos(name: str) -> int:
 def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_client):
     """Reset spreadsheet values between tests."""
 
-    # TODO why isn't this working as the variable for ranges in the body below?
+    # TODO extract a method from here to create a sheet directly from the import in something like
+    # create_test_sheet
     tabs = get_sheet_names()
     ranges = [f"{t}!A1:end" for t in tabs]
-    # print(ranges)
     spreadsheet_id = create_test_sheet["spreadsheetId"]
     spreadsheet_client.values().batchClear(
         spreadsheetId=spreadsheet_id,
         body={"ranges": ranges},
     ).execute()
 
-    # TODO make this a data-driven loop
-    for sheet in create_test_sheet["sheets"]:
-        if sheet["properties"]["title"] == "projects":
-            project_sheet_id = sheet["properties"]["sheetId"]
-        if sheet["properties"]["title"] == "registrations":
-            registration_sheet_id = sheet["properties"]["sheetId"]
-        if sheet["properties"]["title"] == "hackathons":
-            hackathon_sheet_id = sheet["properties"]["sheetId"]
-        if sheet["properties"]["title"] == "users":
-            user_sheet_id = sheet["properties"]["sheetId"]
+    sheet_ids = {s["properties"]["title"]: s["properties"]["sheetId"] for s in create_test_sheet["sheets"]}
+    updates = {"requests": []}
+    requests = updates["requests"]
 
-    updates = {
-        "requests": [
-            {
-                "appendCells": {
-                    "sheetId": project_sheet_id,
-                    "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][sheet_pos("projects")]["data"][0]["rowData"],
-                }
-            },
-            {
-                "appendCells": {
-                    "sheetId": registration_sheet_id,
-                    "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][sheet_pos("registrations")]["data"][0]["rowData"],
-                }
-            },
-            {
-                "appendCells": {
-                    "sheetId": hackathon_sheet_id,
-                    "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][sheet_pos("hackathons")]["data"][0]["rowData"],
-                }
-            },
-            {
-                "appendCells": {
-                    "sheetId": user_sheet_id,
-                    "fields": "userEnteredValue",
-                    "rows": test_data["sheets"][sheet_pos("users")]["data"][0]["rowData"],
-                }
-            },
-        ]
-    }
+    for tab, sheet_id in sheet_ids.items():
+        requests.append({
+            "appendCells": {
+                "sheetId": sheet_id,
+                "fields": "userEnteredValue",
+                "rows": test_data["sheets"][sheet_pos(tab)]["data"][0]["rowData"],
+            }
+        })
+
     spreadsheet_client.batchUpdate(spreadsheetId=spreadsheet_id, body=updates).execute()
     yield create_test_sheet
 

@@ -22,6 +22,22 @@ def check_delta(test: str, delta: List[schema.Delta]):
         print(diff)
 
 
+def test_col_name():
+    assert schema.col_name(0) == "A"
+    assert schema.col_name(1) == "B"
+    assert schema.col_name(26) == "AA"
+    assert schema.col_name(27) == "AB"
+    assert schema.col_name(26 * 2) == "BA"
+
+
+def test_col_desc():
+    assert schema.col_desc(0) == "column 'A'"
+    assert schema.col_desc(1) == "column 'B'"
+    assert schema.col_desc(26) == "column 'AA'"
+    assert schema.col_desc(27) == "column 'AB'"
+    assert schema.col_desc(26 * 2) == "column 'BA'"
+
+
 def test_parse_schema(test_schema):
     """SchemaSheet should parse all schema."""
     test_schema = test_schema.strip()
