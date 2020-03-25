@@ -121,12 +121,12 @@ def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_cli
 
     # TODO why isn't this working as the variable for ranges in the body below?
     tabs = get_sheet_names()
-    ranges = [f"{t}!A1:end" for t in tabs]   # ["users!A1:end", "hackathons!A1:end", "registrations!A1:end"]
+    ranges = [f"{t}!A1:end" for t in tabs]
     # print(ranges)
     spreadsheet_id = create_test_sheet["spreadsheetId"]
     spreadsheet_client.values().batchClear(
         spreadsheetId=spreadsheet_id,
-        body={"ranges": ranges}  # ['projects!A1:end', 'registrations!A1:end', 'hackathons!A1:end', 'users!A1:end']},
+        body={"ranges": ranges},
     ).execute()
 
     # TODO make this a data-driven loop
