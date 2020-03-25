@@ -2,7 +2,7 @@ import flask
 import flask_restful  # type: ignore
 import flask_restful.fields  # type: ignore
 
-from . import models
+from . import mappers
 import sheets
 
 
@@ -26,11 +26,11 @@ class Projects(flask_restful.Resource, ProjectBuilder):
         self.sheets = sheets
         super()
 
-    @flask_restful.marshal_with(models.projects)
+    @flask_restful.marshal_with(mappers.projects)
     def get(self):
         return self.sheets.projects.rows()
 
-    @flask_restful.marshal_with(models.project)
+    @flask_restful.marshal_with(mappers.project)
     def post(self):
         # TODO use flask_restful.reqparse.RequestParser() to parse json
         # and restrict input
@@ -44,11 +44,11 @@ class Project(flask_restful.Resource, ProjectBuilder):
         self.sheets = sheets
         super()
 
-    @flask_restful.marshal_with(models.project)
+    @flask_restful.marshal_with(mappers.project)
     def get(self, id):
         return self.build_project(id)
 
-    @flask_restful.marshal_with(models.project)
+    @flask_restful.marshal_with(mappers.project)
     def patch(self, id):
         # TODO use flask_restful.reqparse.RequestParser() to parse json
         # and restrict input
