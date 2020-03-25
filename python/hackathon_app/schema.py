@@ -57,11 +57,15 @@ class Delta:
         result += self.item.name
         return result
 
+    def col_name(self, position):
+        letter = chr(ord('A') + position)
+        return f"column '{letter}'"
+
     def debug(self):
         result = f"{self.desc()}: "
         if Difference.Position == self.diff:
             # This can only be set for columns
-            result += f"Move {self.name} from column {self.old_position+1} to {self.position+1}. "
+            result += f"Move {self.name} from {self.col_name(self.old_position)} to {self.col_name(self.position)}. "
         if Difference.Name == self.diff:
             result += f"Rename '{self.old_name}' to '{self.name}'. "
         if Difference.OldName == self.diff:
@@ -69,12 +73,12 @@ class Delta:
         if Difference.Columns == self.diff:
             result += f"{self.name} Columns do not match'. "
         if Difference.Remove == self.diff:
-            result += f"Remove {self.name} at column {self.position+1}. "
+            result += f"Remove {self.name} at {self.col_name(self.position)}. "
         if Difference.Missing == self.diff:
             if type(self.item).__name__ == "SchemaColumn":
-                result += f"Insert '{self.name}' at column {self.position+1}. "
+                result += f"Add '{self.name}' at {self.col_name(self.position)}. "
             else:
-                result += f"Create tab '{self.name}'. "
+                result += f"Create a new sheet called '{self.name}'. "
 
         return result
 
@@ -366,7 +370,9 @@ class SchemaReader:
             ).execute()
         except googleapiclient.errors.HttpError as ex:
             raise SchemaError(str(ex))
-        return response["values"][0]
+        if "values" in response:
+            return response["values"][0]
+        return []
 
     def debug(self):
         return self.schema.debug()
