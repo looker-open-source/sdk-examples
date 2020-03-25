@@ -1,5 +1,17 @@
-import React from 'react'
+import noop from 'lodash/noop'
+import React, {Dispatch} from 'react'
+import {IProject, ProjectAction} from '../reducers/projects'
 
-const ProjectsContext = React.createContext(undefined)
+export interface ProjectContextProps {
+  projects: IProject[]
+  dispatch: Dispatch<ProjectAction>
+}
+
+const initialObject: ProjectContextProps = {
+  projects: [],
+  dispatch: noop,
+}
+
+const ProjectsContext = React.createContext(initialObject)
 
 export {ProjectsContext as default}
