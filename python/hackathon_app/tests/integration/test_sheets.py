@@ -1,8 +1,11 @@
 import datetime
 from typing import Sequence
 
+import uuid
+
 from sheets import User, Users, RegisterUser, Registration, Registrations, Sheets
 from . import test_users
+
 
 def test_gets_all_hackathons(sheets: Sheets, test_data):
     """get_hackathons() should return all active hackathons."""
@@ -20,7 +23,7 @@ def test_register_user_registers(
     new_user = sheets.register_user(
         RegisterUser(
             hackathon_id="sanfrancisco_2019",
-            user_id="1",
+            user_id=str(uuid.uuid4()),
             first_name="New",
             last_name="Registration",
             email="newregistrant@newompany.com",
@@ -32,7 +35,7 @@ def test_register_user_registers(
 
     all_users = users.rows()
     last_inserted_user = all_users[-1]
-    test_users.compare_user(last_inserted_user, new_user)
+    assert last_inserted_user == new_user
 
     all_registrants = registrations.rows()
     last_registrant = all_registrants[-1]
@@ -55,7 +58,7 @@ def test_register_user_registers_when_user_exists(
     """register_user() should register a user by adding them to the Registrations sheet
     if user already exists in the Users sheet but not in the Registrations sheet.
     """
-    existing_user = test_users[0]
+    existing_user: User = test_users[0]
     registered_user = sheets.register_user(
         RegisterUser(
             hackathon_id="newhackathon_2019",
@@ -69,7 +72,7 @@ def test_register_user_registers_when_user_exists(
         )
     )
 
-    test_users.compare_user(existing_user, registered_user)
+    assert existing_user == registered_user
     all_users = sorted(users.rows(), key=lambda a: a.id)
     test_users = sorted(test_users, key=lambda t: t.id)
     assert all_users == test_users
@@ -113,7 +116,7 @@ def test_register_updates_user_if_user_is_registered(
             last_name=updated_user.last_name,
             email=updated_user.email,
             organization=updated_user.organization,
-            role=updated_user.role,
+            role=updated_user.org_role,
             tshirt_size=updated_user.tshirt_size,
         )
     )

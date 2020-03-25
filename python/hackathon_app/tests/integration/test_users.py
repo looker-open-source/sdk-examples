@@ -3,19 +3,6 @@ import datetime
 from sheets import User, Users
 
 
-def compare_user(expected: User, actual: User):
-    assert expected.id == actual.id
-    assert expected.email == actual.email
-    assert expected.first_name == actual.first_name
-    assert expected.last_name == actual.last_name
-    assert expected.client_id == actual.client_id
-    assert expected.client_secret == actual.client_secret
-    assert expected.date_created == actual.date_created
-    assert expected.organization == actual.organization
-    assert expected.org_role == actual.org_role
-    assert expected.setup_link == actual.setup_link
-
-
 def test_rows_returns_users(users: Users, test_users):
     """rows() should return a list of User objects"""
     all_users = users.rows()
@@ -24,14 +11,14 @@ def test_rows_returns_users(users: Users, test_users):
 
     user = all_users[0]
     expected = test_users[0]
-    compare_user(expected, user)
+    assert expected == user
 
 
 def test_find_returns_existing_user(users: Users, test_users):
     """find(user) returns True if user already exists"""
     expected = test_users[0]
     actual = users.find(expected.id)
-    compare_user(expected, actual)
+    assert expected == actual
 
 
 def test_find_returns_false_non_existent_user(users: Users):
@@ -53,7 +40,7 @@ def test_create_user(users: Users):
     users.save(new_user)
     all_users = users.rows()
     user = all_users[-1]
-    compare_user(user, new_user)
+    assert new_user == user
     assert user.date_created < datetime.datetime.now(tz=datetime.timezone.utc)
 
 
@@ -72,4 +59,4 @@ def test_update_user_updates(users: Users):
 
     user = users.find(updated_user.id)
     assert isinstance(user, User)
-    compare_user(user, updated_user)
+    assert user == updated_user

@@ -28,6 +28,8 @@ from server import main
 def flask_client(
     spreadsheet,
 ):  # not using return value of fixture, but including it causes it to run
+    main.app.config["GOOGLE_SHEET_ID"] = spreadsheet["spreadsheetId"]
+    main.app.config["TESTING"] = True
     with main.app.test_client() as client:
         yield client
 
@@ -112,18 +114,19 @@ def sheet_pos(name: str) -> int:
     assert result >= 0
     return result
 
+
 @pytest.fixture(name="spreadsheet")
 def reset_test_sheet(create_test_sheet, test_data, spreadsheet_client, drive_client):
     """Reset spreadsheet values between tests."""
 
     # TODO why isn't this working as the variable for ranges in the body below?
-    # tabs = get_sheet_names()
-    # ranges = [f"{t}!A1:end" for t in tabs]   # ["users!A1:end", "hackathons!A1:end", "registrations!A1:end"]
+    tabs = get_sheet_names()
+    ranges = [f"{t}!A1:end" for t in tabs]   # ["users!A1:end", "hackathons!A1:end", "registrations!A1:end"]
     # print(ranges)
     spreadsheet_id = create_test_sheet["spreadsheetId"]
     spreadsheet_client.values().batchClear(
         spreadsheetId=spreadsheet_id,
-        body={"ranges": ['projects!A1:end', 'registrations!A1:end', 'hackathons!A1:end', 'users!A1:end']},
+        body={"ranges": ranges}  # ['projects!A1:end', 'registrations!A1:end', 'hackathons!A1:end', 'users!A1:end']},
     ).execute()
 
     # TODO make this a data-driven loop
@@ -221,7 +224,7 @@ def create_sheet_repr(sheet, model):
 def get_header(sheet):
     """Get the header as a list"""
     sheet_header = sheet["data"][0]["rowData"][0]["values"]
-    header = ["id"]
+    header = ["row_id"]
     for cell in sheet_header:
         cell_value = cell["userEnteredValue"]["stringValue"]
         header.append(cell_value)

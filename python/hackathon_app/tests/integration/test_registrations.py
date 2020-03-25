@@ -3,14 +3,6 @@ import datetime
 from sheets import Registration, Registrations
 
 
-def compare_reg(expected: Registration, actual: Registration):
-    assert expected.id == actual.id
-    assert expected.user_id == actual.user_id
-    assert expected.hackathon_id == actual.hackathon_id
-    assert expected.date_registered == actual.date_registered
-    assert expected.attended == actual.attended
-
-
 def test_rows_returns_registrants(registrations: Registrations, test_registrants):
     """rows() should return a list of Registration objects"""
     all_registrations = registrations.rows()
@@ -19,7 +11,7 @@ def test_rows_returns_registrants(registrations: Registrations, test_registrants
 
     registrant = all_registrations[0]
     expected = test_registrants[0]
-    compare_reg(expected, registrant)
+    assert expected == registrant
 
 
 def test_is_registered_returns_true_for_existing_registrants(

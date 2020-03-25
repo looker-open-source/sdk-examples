@@ -74,7 +74,7 @@ def get_hackathon_role(*, sdk: methods.LookerSDK) -> models.Role:
 def register_user(
     *, hackathon: str, first_name: str, last_name: str, email: str
 ) -> str:
-    sdk = looker_sdk.init31()
+    sdk = looker_sdk.init40()
 
     user = find_or_create_user(
         sdk=sdk, first_name=first_name, last_name=last_name, email=email
@@ -123,7 +123,7 @@ def find_or_create_user(
 
 def enable_users_by_hackathons(hackathons: Sequence[str]) -> Dict[str, str]:
     global LOOKER_GROUP_PREFIX
-    sdk = looker_sdk.init31()
+    sdk = looker_sdk.init40()
     groups = {g.name: g.id for g in sdk.all_groups(fields="id,name")}
     ret = {}
     for hackathon in hackathons:
@@ -205,7 +205,7 @@ def disable_user(*, sdk: methods.LookerSDK, user_id: int):
 
 
 def me():
-    sdk = looker_sdk.init31()
+    sdk = looker_sdk.init40()
     return sdk.me()
 
 

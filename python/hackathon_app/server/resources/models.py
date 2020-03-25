@@ -8,7 +8,7 @@ user = {
     "id": flask_restful.fields.String,
     "date_created": flask_restful.fields.DateTime,
     "organization": flask_restful.fields.String,
-    "role": flask_restful.fields.String,
+    "org_role": flask_restful.fields.String,
     "tshirt_size": flask_restful.fields.String,
 }
 hackathon = {

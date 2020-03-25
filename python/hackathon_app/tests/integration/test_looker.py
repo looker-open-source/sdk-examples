@@ -10,7 +10,7 @@ import sheets
 
 @pytest.fixture
 def sdk():
-    sdk = looker_sdk.init31()
+    sdk = looker_sdk.init40()
     yield sdk
     sdk.logout()
 

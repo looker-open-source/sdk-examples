@@ -47,7 +47,7 @@ def test_get_user_auth_code(sheets: Sheets):
         last_name="P",
         email="hundyp@company.com",
         organization="company",
-        role="BI analyst",
+        org_role="BI analyst",
         tshirt_size="M",
     )
 
