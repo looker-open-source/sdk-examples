@@ -21,6 +21,7 @@ class Difference(enum.Enum):
     OldName = enum.auto()  # Old name is different
     Columns = enum.auto()  # Column definitions differ
     Missing = enum.auto()  # Item is not found in "other"
+    Remove = enum.auto()  # Old item should be removed
 
 
 class Delta:
@@ -60,13 +61,15 @@ class Delta:
         result = f"{self.desc()}: "
         if Difference.Position == self.diff:
             # This can only be set for columns
-            result += f"Move {self.name} from position {self.old_position+1} to {self.position+1}. "
+            result += f"Move {self.name} from column {self.old_position+1} to {self.position+1}. "
         if Difference.Name == self.diff:
             result += f"Rename '{self.old_name}' to '{self.name}'. "
         if Difference.OldName == self.diff:
             result += f"Old Name '{self.old_name}' does not match '{self.name}'. "
         if Difference.Columns == self.diff:
             result += f"{self.name} Columns do not match'. "
+        if Difference.Remove == self.diff:
+            result += f"Remove {self.name} at column {self.position+1}. "
         if Difference.Missing == self.diff:
             if type(self.item).__name__ == "SchemaColumn":
                 result += f"Insert '{self.name}' at column {self.position+1}. "
@@ -167,6 +170,16 @@ class SchemaTab(SchemaName):
             result += f"\n\t{col.debug()}"
         return result
 
+    def find_extra_columns(self, other: "SchemaTab"):
+        source = {c.name: c for c in self.columns}
+        dest = {c.name: c for c in other.columns}
+        delta: List[Delta] = []
+        for key, col in dest.items():
+            if key not in source:
+                # Column is not found in source
+                delta.append(Delta(item=col, parent=self, name=col.name, position=col.position, diff=Difference.Remove))
+        return delta
+
     def compare(self, other: "SchemaTab"):
         """Compare the schema and the tab, returning delta"""
         delta = super().compare(other, self)
@@ -183,6 +196,9 @@ class SchemaTab(SchemaName):
                 colDiff = True
                 delta.append(Delta(item=col, parent=self, name=col.name, position=col.position, diff=Difference.Missing))
 
+        removes = self.find_extra_columns(other)
+        for remove in removes:
+            delta.append(remove)
         if colDiff:
             delta.append(Delta(item=self, parent=self, name=self.name, diff=Difference.Columns))
         return delta
