@@ -25,12 +25,12 @@ def sheet_url(sheet_id: str):
 if __name__ == "__main__":
     print("Checking various schemas. Please wait ...")
     master = schema.SchemaSheet(filename="hackathon.schema")
-    model = sheets.get_model_schema()
+    code = sheets.get_model_schema()
     files_to_import = sheet_utils.get_tsv_files()
     imported = schema.SchemaSheet(lines="\n".join(schema.import_schema(files_to_import)))
-    compare_schema("hackathon.schema vs. code", master, model)
+    compare_schema("hackathon.schema vs. code", master, code)
     compare_schema("hackathon.schema vs. imported files", master, imported)
-    compare_schema("code vs. imported files", model, imported)
+    compare_schema("code vs. imported files", code, imported)
 
     # check the schema on any sheets that may have ids specified
     sheets_to_check = os.getenv("GSHEETS_TO_CHECK", "")
@@ -49,5 +49,7 @@ if __name__ == "__main__":
                 cred_file=creds,
             )
             compare_schema(f"hackathon.schema vs. {url}", master, reader.schema)
+            compare_schema(f"code vs. {url}", code, reader.schema)
+            compare_schema(f"imported files vs. {url}", imported, reader.schema)
 
 
