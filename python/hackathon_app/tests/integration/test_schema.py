@@ -72,4 +72,4 @@ def test_sheet_compare(create_test_sheet, cred_file, test_schema):
     delta2 = model.compare(reader.schema)
     check_delta(f"Model vs. Sheet {url}", delta2)
     assert len(delta) == 9  # TODO resolve all these schema differences
-    assert len(delta2) == 0
+    assert len(delta2) == 2
