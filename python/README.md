@@ -1,6 +1,20 @@
 # Python Examples for the Looker API
 
-You can find Python language examples in this folder.
+You can find Python language examples in this folder. 
+
+NOTE: Due to changes from version 0.1.3b8, older examples have been moved to [an archive folder](v0_1_3b7__and_earlier). Code using the older syntax can be identified by use of the `from looker_sdk import client` import, and `sdk = client.setup()` initialization command. Up to date code will use the `sdk = looker_sdk.initXX()` syntax.
+
+## Run queries
+
+- [Define a query with a JSON body](run_inline_query.py)
+
+## Looker administration
+
+- [Get a data dictionary for an explore](lookml_model_explore.py)
+- [Assign groups to a role](assign_groups_to_role.py)
+- [Disable users by email](disable_users_by_email.py)
+
+# Previous SDK syntax
 
 ## Connection management
 
