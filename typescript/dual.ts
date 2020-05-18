@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-import { Looker40SDK, Looker31SDK, NodeSession, NodeSettingsIniFile } from '@looker/sdk'
+import { Looker40SDK, Looker31SDK, NodeSession, NodeSettingsIniFile } from '@looker/sdk/lib/node'
 
 /**
  *
