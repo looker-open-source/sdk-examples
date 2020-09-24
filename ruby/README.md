@@ -43,4 +43,4 @@ ___________
 
 - Kill all running queries in the instance [[link]](https://github.com/looker-open-source/sdk-examples/blob/master/ruby/kill_all_running_queries.rb)
 - Test database connections [[link]](https://github.com/looker-open-source/sdk-examples/blob/master/ruby/test_all_connections.rb)
-
+- Create Looker Themes for your dashboards [[link]](https://github.com/looker-open-source/sdk-examples/blob/master/ruby/create_themes.rb)
