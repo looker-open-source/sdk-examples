@@ -47,7 +47,7 @@ all_themes = [airbnb_like, gcp_like, aws_like, microsoft_like, facebook_like, da
 ​
 # pull the list of themes we created above and create them all in our instance
 all_themes.each { | theme|
-	looker.create_theme(theme)
+	sdk.create_theme(theme)
 }
 
 
