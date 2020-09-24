@@ -1,3 +1,7 @@
+# This repository is archived
+
+The [SDK codegen project examples directory](https://github.com/looker-open-source/sdk-codegen/tree/master/examples) is the new home of Looker's SDK examples. 
+
 # Examples for the Looker SDKs
 
 This repository contains source code examples and projects that use SDKs to communicate with the Looker API. Examples are organized by folder names that correspond to the name of the programming language used.
