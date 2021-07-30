@@ -1,9 +1,12 @@
 import sys
 import time
 
-from looker_sdk import client, models
+import looker_sdk
+from looker_sdk import models
+from looker_sdk.rtl import transport
 
-sdk = client.setup("../looker.ini")
+
+sdk = looker_sdk.init31("../looker.ini")
 
 
 def get_dashboard(title: str):
@@ -59,7 +62,11 @@ def download_tile(tile: models.DashboardElement, format: str = "png"):
         elapsed += delay
         print(f"{elapsed} seconds elapsed")
 
-    result = sdk.render_task_results(task.id)
+    result = sdk.render_task_results(
+        task.id,
+        # wait up to 300 seconds
+        transport_options=transport.TransportSettings(timeout=300),
+    )
     fileName = f"{tile.title}.{format}"
     with open(fileName, "wb") as f:
         f.write(result)

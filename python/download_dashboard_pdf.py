@@ -1,57 +1,83 @@
+import json
+import urllib
 import sys
+import textwrap
 import time
+from typing import cast, Dict, Optional
 
-from looker_sdk import client, models
+import looker_sdk
+from looker_sdk import models
 
-sdk = client.setup("../looker.ini")
+import sdk_exceptions
+
+sdk = looker_sdk.init31("../looker.ini")
 
 
 def main():
+    """Given a dashboard title, search all dashboards to retrieve its id and use
+    it to render the dashboard's pdf.
+
+    Examples of how to use this:
+    $ python download_dashboard_pdf.py "A Test Dashboard"
+    $ python download_dashboard_pdf.py "A Test Dashboard" '{"filter1": "value1, value2", "filter2": "value3"}'
+    $ python download_dashboard_pdf.py "A Test Dashboard" {} "single_column"
+    """
     dashboard_title = sys.argv[1] if len(sys.argv) > 1 else ""
-    pdf_style = sys.argv[2] if len(sys.argv) > 2 else "tiled"
-    pdf_width = int(sys.argv[3]) if len(sys.argv) > 3 else 545
-    pdf_height = int(sys.argv[4]) if len(sys.argv) > 4 else 842
+    filters = json.loads(sys.argv[2]) if len(sys.argv) > 2 else None
+    pdf_style = sys.argv[3] if len(sys.argv) > 3 else "tiled"
+    pdf_width = int(sys.argv[4]) if len(sys.argv) > 4 else 545
+    pdf_height = int(sys.argv[5]) if len(sys.argv) > 5 else 842
 
     if not dashboard_title:
-        print(
-            "Please provide: <dashboardTitle> [<dashboard_style>] [<pdf_width>] [<pdf_height>]"
+        raise sdk_exceptions.ArgumentError(
+            textwrap.dedent(
+                """
+                Please provide: <dashboard_title> [<dashboard_filters>] [<dashboard_style>] [<pdf_width>] [<pdf_height>]
+                    dashboard_style defaults to "tiled"
+                    pdf_width defaults to 545
+                    pdf_height defaults to 842"""
+            )
         )
-        print('  dashboard_style defaults to "tiled"')
-        print("  pdf_width defaults to 545")
-        print("  pdf_height defaults to 842")
-        return
 
-    dashboard = get_dashboard(dashboard_title)
-    download_dashboard(dashboard, pdf_style, pdf_width, pdf_height)
+    dashboard = cast(models.Dashboard, get_dashboard(dashboard_title))
+    download_dashboard(dashboard, pdf_style, pdf_width, pdf_height, filters)
 
 
-def get_dashboard(title: str) -> models.Dashboard:
-    """Get a dashboard by title"""
+def get_dashboard(title: str) -> Optional[models.Dashboard]:
+    """Get a dashboard by title."""
     title = title.lower()
     dashboard = next(iter(sdk.search_dashboards(title=title)), None)
     if not dashboard:
-        print(f"dashboard {title} was not found")
+        raise sdk_exceptions.NotFoundError(f'dashboard "{title}" not found')
     assert isinstance(dashboard, models.Dashboard)
     return dashboard
 
 
 def download_dashboard(
-    dashboard: models.Dashboard, style: str, width: int, height: int
+    dashboard: models.Dashboard,
+    style: str = "tiled",
+    width: int = 545,
+    height: int = 842,
+    filters: Optional[Dict[str, str]] = None,
 ):
-    """Download specified dashboard as PDF."""
+    """Download specified dashboard as PDF"""
     assert dashboard.id
     id = int(dashboard.id)
     task = sdk.create_dashboard_render_task(
         id,
         "pdf",
-        models.CreateDashboardRenderTask(dashboard_style=style),
+        models.CreateDashboardRenderTask(
+            dashboard_style=style,
+            dashboard_filters=urllib.parse.urlencode(filters) if filters else None,
+        ),
         width,
         height,
     )
 
     if not (task and task.id):
-        print(f"Could not create a render task for {dashboard.title}")
-        return None
+        raise sdk_exceptions.RenderTaskError(
+            f'Could not create a render task for "{dashboard.title}"'
+        )
 
     # poll the render task until it completes
     elapsed = 0.0
@@ -60,8 +86,9 @@ def download_dashboard(
         poll = sdk.render_task(task.id)
         if poll.status == "failure":
             print(poll)
-            print(f"Render failed for {dashboard.title}")
-            return None
+            raise sdk_exceptions.RenderTaskError(
+                f'Render failed for "{dashboard.title}"'
+            )
         elif poll.status == "success":
             break
 
@@ -70,10 +97,10 @@ def download_dashboard(
     print(f"Render task completed in {elapsed} seconds")
 
     result = sdk.render_task_results(task.id)
-    fileName = f"{dashboard.title}.pdf"
-    with open(fileName, "wb+") as f:
+    filename = f"{dashboard.title}.pdf"
+    with open(filename, "wb") as f:
         f.write(result)
-    print(f"Dashboard pdf saved to {fileName}")
+    print(f'Dashboard pdf saved to "{filename}"')
 
 
 main()
